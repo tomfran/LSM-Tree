@@ -22,9 +22,7 @@ class BlockTest {
     @Test
     public void shouldFill() {
         b.add(new byte[]{1}, new byte[]{2});
-        b.add(new byte[]{1}, new byte[]{2});
-        boolean res = b.add(new byte[]{1}, new byte[]{2});
-        assert !res;
+        assert !b.add(new byte[]{1}, new byte[]{2});
     }
 
     @Test

@@ -43,4 +43,8 @@ public class Block {
         return new byte[]{(byte) (x >> 8), (byte) x};
     }
 
+    public int getSize() {
+        return data.size() + offsets.size() * 2;
+    }
+
 }
