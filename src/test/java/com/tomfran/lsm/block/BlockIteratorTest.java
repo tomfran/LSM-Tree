@@ -6,7 +6,7 @@ import org.junit.jupiter.api.Test;
 class BlockIteratorTest {
 
     Block b = new Block(32);
-    BlockIterator it = new BlockIterator(b);
+    BlockIterator it;
 
     @BeforeEach
     public void setup() {
@@ -16,6 +16,8 @@ class BlockIteratorTest {
         b.add(new byte[]{1, 2}, new byte[]{2});
         b.add(new byte[]{2}, new byte[]{3});
         b.add(new byte[]{3}, new byte[]{4});
+
+        it = new BlockIterator(b);
     }
 
     @Test
@@ -35,4 +37,10 @@ class BlockIteratorTest {
         assert !it.hasNext();
     }
 
+    @Test
+    public void shouldReadLongs() {
+        byte[] k = it.key();
+        assert it.readLong(k) == 258;
+    }
+    
 }
