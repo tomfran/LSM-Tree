@@ -22,6 +22,8 @@ class BlockIteratorTest {
 
     @Test
     public void shouldGetEntries() {
+        assert it.hasNext();
+        it.next();
         assert it.key()[0] == 1;
         assert it.key()[1] == 2;
         assert it.value()[0] == 2;
@@ -39,8 +41,9 @@ class BlockIteratorTest {
 
     @Test
     public void shouldReadLongs() {
+        it.next();
         byte[] k = it.key();
         assert it.readLong(k) == 258;
     }
-    
+
 }

@@ -26,9 +26,8 @@ public class SSTable {
         if (last == null || !last.add(key, value)) {
             last = addNewBlock();
             firstKeys.add(key);
+            last.add(key, value);
         }
-
-        last.add(key, value);
     }
 
     private Block addNewBlock() {

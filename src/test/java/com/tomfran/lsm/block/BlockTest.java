@@ -36,4 +36,11 @@ class BlockTest {
         boolean res = b.add(new byte[]{1}, new byte[Block.MAX_VALUE_SIZE + 1]);
         assert !res;
     }
+
+    @Test
+    public void shouldPrint() {
+        b.add(new byte[]{1}, new byte[]{2});
+        b.add(new byte[]{2}, new byte[]{3});
+        b.add(new byte[]{3}, new byte[]{4});
+    }
 }

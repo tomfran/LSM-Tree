@@ -3,6 +3,8 @@ package com.tomfran.lsm.block;
 import it.unimi.dsi.fastutil.bytes.ByteArrayList;
 import it.unimi.dsi.fastutil.shorts.ShortArrayList;
 
+import java.util.Arrays;
+
 public class Block {
 
     static final int MAX_KEY_SIZE = 65536;
@@ -47,4 +49,23 @@ public class Block {
         return data.size() + offsets.size() * 2;
     }
 
+    @Override
+    public String toString() {
+        BlockIterator it = new BlockIterator(this);
+        System.out.println(it.index + " " + it.maxIndex);
+        StringBuilder sb = new StringBuilder();
+        sb.append("Block, num elements = ");
+        sb.append(offsets.size());
+        sb.append("\n{\n");
+        while (it.hasNext()) {
+            it.next();
+            sb.append("\t");
+            sb.append(Arrays.toString(it.key()));
+            sb.append(" -> ");
+            sb.append(Arrays.toString(it.value()));
+            sb.append("\n");
+        }
+        sb.append("}");
+        return sb.toString();
+    }
 }

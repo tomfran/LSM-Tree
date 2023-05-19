@@ -2,13 +2,13 @@ package com.tomfran.lsm.block;
 
 public class BlockIterator {
 
-    private final Block block;
-    private final int maxIndex;
-    private int index;
+    protected final Block block;
+    protected final int maxIndex;
+    protected int index;
 
     public BlockIterator(Block block) {
         this.block = block;
-        this.index = 0;
+        this.index = -1;
         this.maxIndex = block.offsets.size() - 1;
     }
 
@@ -21,6 +21,9 @@ public class BlockIterator {
     }
 
     public byte[] key() {
+        if (index < 0 || index > maxIndex)
+            throw new RuntimeException("Invalid element index: " + index);
+
         short currentOffset = block.offsets.getShort(index);
         short keyLength = readShort(currentOffset);
 
@@ -32,6 +35,9 @@ public class BlockIterator {
     }
 
     public byte[] value() {
+        if (index < 0 || index > maxIndex)
+            throw new RuntimeException("Invalid element index: " + index);
+
         short currentOffset = block.offsets.getShort(index);
         short keyLength = readShort(currentOffset);
         short valueLength = readShort(currentOffset + 2 + keyLength);
@@ -43,7 +49,7 @@ public class BlockIterator {
         return value;
     }
 
-    public short readShort(int i) {
+    private short readShort(int i) {
         return (short) ((short) block.data.getByte(i) << 4 | (short) block.data.getByte(i + 1));
     }
 
