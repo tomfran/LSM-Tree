@@ -1,8 +1,9 @@
-package com.tomfran.lsm.table;
+package com.tomfran.lsm.sstable;
 
 import com.tomfran.lsm.block.BlockIterator;
+import com.tomfran.lsm.interfaces.Iterator;
 
-public class SSTableIterator {
+public class SSTableIterator implements Iterator {
 
     private final SSTable table;
     private final int maxBlockIndex;

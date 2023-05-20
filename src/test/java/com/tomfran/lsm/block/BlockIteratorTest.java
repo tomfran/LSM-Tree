@@ -17,7 +17,7 @@ class BlockIteratorTest {
         b.add(new byte[]{2}, new byte[]{3});
         b.add(new byte[]{3}, new byte[]{4});
 
-        it = new BlockIterator(b);
+        it = b.iterator();
     }
 
     @Test

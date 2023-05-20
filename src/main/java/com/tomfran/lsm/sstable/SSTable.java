@@ -1,4 +1,4 @@
-package com.tomfran.lsm.table;
+package com.tomfran.lsm.sstable;
 
 import com.tomfran.lsm.block.Block;
 import it.unimi.dsi.fastutil.ints.IntArrayList;
@@ -63,6 +63,10 @@ public class SSTable {
             return i;
         else
             return j;
+    }
+
+    public SSTableIterator iterator() {
+        return new SSTableIterator(this);
     }
 
 }

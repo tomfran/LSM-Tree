@@ -1,4 +1,4 @@
-package com.tomfran.lsm.table;
+package com.tomfran.lsm.sstable;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;

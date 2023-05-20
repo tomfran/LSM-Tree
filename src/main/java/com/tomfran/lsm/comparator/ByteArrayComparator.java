@@ -2,7 +2,7 @@ package com.tomfran.lsm.comparator;
 
 public class ByteArrayComparator {
 
-    static int compare(byte[] a, byte[] b) {
+    static public int compare(byte[] a, byte[] b) {
         int aLen = a.length;
         int bLen = b.length;
 

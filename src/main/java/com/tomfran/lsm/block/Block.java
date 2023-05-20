@@ -49,21 +49,20 @@ public class Block {
         return data.size() + offsets.size() * 2;
     }
 
+    public BlockIterator iterator() {
+        return new BlockIterator(this);
+    }
+
     @Override
     public String toString() {
         BlockIterator it = new BlockIterator(this);
-        System.out.println(it.index + " " + it.maxIndex);
         StringBuilder sb = new StringBuilder();
-        sb.append("Block, num elements = ");
-        sb.append(offsets.size());
-        sb.append("\n{\n");
+
+        sb.append("Block, num elements = ").append(offsets.size()).append("\n{\n");
         while (it.hasNext()) {
             it.next();
-            sb.append("\t");
-            sb.append(Arrays.toString(it.key()));
-            sb.append(" -> ");
-            sb.append(Arrays.toString(it.value()));
-            sb.append("\n");
+            sb.append("\t").append(Arrays.toString(it.key())).append(" -> ")
+                    .append(Arrays.toString(it.value())).append("\n");
         }
         sb.append("}");
         return sb.toString();

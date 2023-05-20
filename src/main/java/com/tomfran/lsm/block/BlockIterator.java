@@ -1,6 +1,8 @@
 package com.tomfran.lsm.block;
 
-public class BlockIterator {
+import com.tomfran.lsm.interfaces.Iterator;
+
+public class BlockIterator implements Iterator {
 
     protected final Block block;
     protected final int maxIndex;

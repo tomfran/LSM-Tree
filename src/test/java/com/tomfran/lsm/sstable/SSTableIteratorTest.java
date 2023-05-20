@@ -1,4 +1,4 @@
-package com.tomfran.lsm.table;
+package com.tomfran.lsm.sstable;
 
 import org.junit.jupiter.api.Test;
 
@@ -15,7 +15,7 @@ class SSTableIteratorTest {
             t.add(new byte[]{(byte) i}, new byte[]{(byte) (i + 1)});
         }
 
-        it = new SSTableIterator(t);
+        it = t.iterator();
         assert it.hasNext();
 
         for (int i = 0; i < limit; i++) {
