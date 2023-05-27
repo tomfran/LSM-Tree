@@ -1,6 +1,6 @@
 package com.tomfran.lsm.block;
 
-import com.tomfran.lsm.interfaces.Iterator;
+import com.tomfran.lsm.iterator.Iterator;
 
 public class BlockIterator implements Iterator {
 

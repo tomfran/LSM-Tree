@@ -1,7 +1,7 @@
 package com.tomfran.lsm.sstable;
 
 import com.tomfran.lsm.block.BlockIterator;
-import com.tomfran.lsm.interfaces.Iterator;
+import com.tomfran.lsm.iterator.Iterator;
 
 public class SSTableIterator implements Iterator {
 

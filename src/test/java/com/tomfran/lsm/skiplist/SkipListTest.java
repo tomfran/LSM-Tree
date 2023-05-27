@@ -23,7 +23,7 @@ class SkipListTest {
             keys.add(key);
 
             var e = getArr(key);
-            t.put(e, e);
+            t.add(e, e);
         }
 
         assert t.size() == keys.size();

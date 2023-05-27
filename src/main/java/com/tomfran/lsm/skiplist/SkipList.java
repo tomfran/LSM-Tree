@@ -2,16 +2,15 @@ package com.tomfran.lsm.skiplist;
 
 import com.tomfran.lsm.comparator.ByteArrayComparator;
 
-import java.util.Arrays;
 import java.util.random.RandomGenerator;
 
 public class SkipList {
 
-    private final Node sentinel;
-    private final int levels;
-    private final RandomGenerator rn = RandomGenerator.getDefault();
-    private int size;
-    private int nonNullSize;
+    protected final Node sentinel;
+    protected final int levels;
+    protected final RandomGenerator rn = RandomGenerator.getDefault();
+    protected int size;
+    protected int nonNullSize;
 
     public SkipList(int levels) {
         if (levels < 1)
@@ -25,7 +24,7 @@ public class SkipList {
         return ByteArrayComparator.compare(a, b);
     }
 
-    public void put(byte[] key, byte[] value) {
+    public void add(byte[] key, byte[] value) {
         // find the nodes to update, starting from top level
         Node[] toUpdate = new Node[levels];
         Node curr = sentinel;
@@ -74,7 +73,7 @@ public class SkipList {
     }
 
     public void delete(byte[] key) {
-        put(key, null);
+        add(key, null);
         nonNullSize--;
     }
 
@@ -96,6 +95,10 @@ public class SkipList {
         return nonNullSize;
     }
 
+    public SkipListIterator iterator() {
+        return new SkipListIterator(this);
+    }
+
     @Override
     public String toString() {
         StringBuilder sb = new StringBuilder();
@@ -109,24 +112,6 @@ public class SkipList {
             sb.append("null\n");
         }
         return sb.toString();
-    }
-
-    private static class Node {
-
-        private final byte[] key;
-        private final Node[] next;
-        private byte[] value;
-
-        public Node(byte[] key, byte[] value, Node[] next) {
-            this.key = key;
-            this.value = value;
-            this.next = next;
-        }
-
-        @Override
-        public String toString() {
-            return "(" + Arrays.toString(key) + ")";
-        }
     }
 
 }

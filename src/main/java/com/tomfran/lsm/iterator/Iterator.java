@@ -1,4 +1,4 @@
-package com.tomfran.lsm.interfaces;
+package com.tomfran.lsm.iterator;
 
 public interface Iterator {
 
