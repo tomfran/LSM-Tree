@@ -24,8 +24,7 @@ public class SkipList {
         return ByteArrayComparator.compare(a, b);
     }
 
-    public void add(byte[] key, byte[] value) {
-        // find the nodes to update, starting from top level
+    public void put(byte[] key, byte[] value) {
         Node[] toUpdate = new Node[levels];
         Node curr = sentinel;
         for (int l = levels - 1; l >= 0; l--) {
@@ -35,13 +34,11 @@ public class SkipList {
             toUpdate[l] = curr;
         }
 
-        // if key already exists, update value
         if (toUpdate[0].next[0] != null && compare(toUpdate[0].next[0].key, key) == 0) {
             toUpdate[0].next[0].value = value;
             return;
         }
 
-        // insert new node
         Node inserted = new Node(key, value, new Node[levels]);
 
         boolean nextLevel = true;
@@ -60,7 +57,6 @@ public class SkipList {
     }
 
     public byte[] get(byte[] key) {
-        // start from top and find the node before the one we're looking for
         Node curr = sentinel;
         for (int l = levels - 1; l >= 0; l--) {
             while (curr.next[l] != null && compare(curr.next[l].key, key) < 0)
@@ -73,26 +69,12 @@ public class SkipList {
     }
 
     public void delete(byte[] key) {
-        add(key, null);
+        put(key, null);
         nonNullSize--;
     }
 
     public int size() {
         return size;
-    }
-
-    public int size(int level) {
-        int size = 0;
-        Node curr = sentinel;
-        while (curr.next[level] != null) {
-            size++;
-            curr = curr.next[level];
-        }
-        return size;
-    }
-
-    public int nonNullSize() {
-        return nonNullSize;
     }
 
     public SkipListIterator iterator() {

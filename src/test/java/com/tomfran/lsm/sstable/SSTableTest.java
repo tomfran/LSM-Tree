@@ -7,7 +7,7 @@ import java.util.stream.IntStream;
 
 class SSTableTest {
 
-    SSTable t = new SSTable(12);
+    SSTable t = new SSTable(128);
 
     @BeforeEach
     public void setup() {
@@ -18,24 +18,20 @@ class SSTableTest {
 
     @Test
     public void shouldAdd() {
-        t.add(new byte[]{1}, new byte[]{2});
+        t.put(new byte[]{1}, new byte[]{2});
         assert t.blocks.size() == 1;
     }
 
     @Test
-    public void shouldAddTwoBlocks() {
-        t.add(new byte[]{1}, new byte[]{2});
-        t.add(new byte[]{2}, new byte[]{3});
-        assert t.blocks.size() == 2;
-    }
+    public void shouldGet() {
+        IntStream.range(0, 100).forEach(i -> t.put(new byte[]{(byte) i}, new byte[]{(byte) (i + 1)}));
 
-    @Test
-    public void shouldFindCandidate() {
-        IntStream.range(0, 10).forEach(i -> t.firstKeys.add(new byte[]{(byte) i}));
+        for (int i = 0; i < 100; i++) {
+            var key = new byte[]{(byte) i};
+            var value = t.get(key);
 
-        assert t.getCandidateBlock(new byte[]{5}) == 4;
-        assert t.getCandidateBlock(new byte[]{10}) == 9;
-        assert t.getCandidateBlock(new byte[]{0}) == 0;
-        assert t.getCandidateBlock(new byte[]{100}) == 9;
+            assert value != null;
+            assert value[0] == (byte) (i + 1);
+        }
     }
 }

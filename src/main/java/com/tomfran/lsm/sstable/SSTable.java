@@ -1,6 +1,7 @@
 package com.tomfran.lsm.sstable;
 
 import com.tomfran.lsm.block.Block;
+import com.tomfran.lsm.iterator.Iterator;
 import it.unimi.dsi.fastutil.ints.IntArrayList;
 import it.unimi.dsi.fastutil.objects.ObjectArrayList;
 
@@ -8,10 +9,16 @@ import static java.util.Arrays.compare;
 
 public class SSTable {
 
+    static final int DEFAULT_BLOCK_SIZE = 1024;
+
     protected int blockSize;
     protected ObjectArrayList<Block> blocks;
     protected ObjectArrayList<byte[]> firstKeys;
     protected IntArrayList offsets;
+
+    public SSTable() {
+        this(DEFAULT_BLOCK_SIZE);
+    }
 
     public SSTable(int blockSize) {
         this.blockSize = blockSize;
@@ -20,7 +27,7 @@ public class SSTable {
         offsets = new IntArrayList();
     }
 
-    public void add(byte[] key, byte[] value) {
+    public void put(byte[] key, byte[] value) {
         Block last = blocks.isEmpty() ? null : blocks.get(blocks.size() - 1);
 
         if (last == null || !last.add(key, value)) {
@@ -28,6 +35,34 @@ public class SSTable {
             firstKeys.add(key);
             last.add(key, value);
         }
+    }
+
+    public byte[] get(byte[] key) {
+        if (mightContain(key))
+            return search(key);
+
+        return null;
+    }
+
+    private boolean mightContain(byte[] key) {
+        return true;
+    }
+
+    private byte[] search(byte[] key) {
+        int blockIndex = getCandidateBlock(key);
+        if (blockIndex < 0)
+            return null;
+
+        Block block = blocks.get(blockIndex);
+        Iterator it = block.iterator();
+
+        while (it.hasNext()) {
+            it.next();
+            if (compare(key, it.key()) == 0)
+                return it.value();
+        }
+
+        return null;
     }
 
     private Block addNewBlock() {
@@ -44,7 +79,7 @@ public class SSTable {
         offsets.add(previousOffset + lastBlockSize);
     }
 
-    public int getCandidateBlock(byte[] key) {
+    private int getCandidateBlock(byte[] key) {
         int i, j, m, comp;
         i = 0;
         j = firstKeys.size() - 1;
@@ -59,7 +94,7 @@ public class SSTable {
             else
                 i = m;
         }
-        if (compare(key, firstKeys.get(j)) <= 0)
+        if (compare(key, firstKeys.get(j)) < 0)
             return i;
         else
             return j;

@@ -29,7 +29,7 @@ class SkipListIteratorTest {
             int tmp = arr[i];
             arr[i] = arr[j];
             arr[j] = tmp;
-            l.add(new byte[]{(byte) arr[i]}, new byte[]{(byte) (arr[i] + 1)});
+            l.put(new byte[]{(byte) arr[i]}, new byte[]{(byte) (arr[i] + 1)});
         }
 
         assert it.hasNext();

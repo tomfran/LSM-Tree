@@ -21,13 +21,13 @@ class IteratorMergerTest {
         t2 = new SSTable(64);
 
         for (int i = 0; i < 5; i++)
-            l.add(new byte[]{(byte) i}, new byte[]{(byte) (i)});
+            l.put(new byte[]{(byte) i}, new byte[]{(byte) (i)});
 
         for (int i = 0; i < 10; i++)
-            t1.add(new byte[]{(byte) i}, new byte[]{(byte) (i + 1)});
+            t1.put(new byte[]{(byte) i}, new byte[]{(byte) (i + 1)});
 
         for (int i = 0; i < 15; i++)
-            t2.add(new byte[]{(byte) i}, new byte[]{(byte) (i + 2)});
+            t2.put(new byte[]{(byte) i}, new byte[]{(byte) (i + 2)});
     }
 
     @Test

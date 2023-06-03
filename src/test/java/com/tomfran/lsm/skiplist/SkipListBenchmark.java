@@ -15,12 +15,12 @@ public class SkipListBenchmark {
         SkipList map = new SkipList(level);
 
         for (int i = 0; i < warmup; i++) {
-            map.add(f(), f());
+            map.put(f(), f());
         }
 
         long start = System.nanoTime();
         for (int i = 0; i < size; i++) {
-            map.add(f(), f());
+            map.put(f(), f());
         }
 
         long end = System.nanoTime();

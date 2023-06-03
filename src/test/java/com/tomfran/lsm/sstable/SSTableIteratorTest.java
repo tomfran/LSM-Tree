@@ -12,7 +12,7 @@ class SSTableIteratorTest {
         int limit = 126;
         t = new SSTable(64);
         for (int i = 0; i < limit; i++) {
-            t.add(new byte[]{(byte) i}, new byte[]{(byte) (i + 1)});
+            t.put(new byte[]{(byte) i}, new byte[]{(byte) (i + 1)});
         }
 
         it = t.iterator();
