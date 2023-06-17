@@ -1,8 +1,6 @@
-package com.tomfran.lsm.compactor;
+package com.tomfran.lsm.sstable;
 
 import com.tomfran.lsm.iterator.IteratorMerger;
-import com.tomfran.lsm.sstable.SSTable;
-import com.tomfran.lsm.sstable.SSTableIterator;
 
 import java.util.List;
 
@@ -18,7 +16,11 @@ public class SSTableCompactor {
         SSTableIterator[] tableIterators = tables.stream().map(SSTable::iterator).toArray(SSTableIterator[]::new);
         IteratorMerger it = new IteratorMerger(tableIterators);
 
-        SSTable result = new SSTable();
+        int size = 0;
+        for (SSTable table : tables)
+            size += table.size();
+
+        SSTable result = new SSTable(size);
         while (it.hasNext()) {
             it.next();
             result.put(it.key(), it.value());

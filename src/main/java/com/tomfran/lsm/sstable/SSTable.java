@@ -10,21 +10,32 @@ import static java.util.Arrays.compare;
 public class SSTable {
 
     static final int DEFAULT_BLOCK_SIZE = 1024;
+    static final int DEFAULT_EXPECTED_ELEMENTS = 10_000;
 
     protected int blockSize;
+    protected int numElements;
+
     protected ObjectArrayList<Block> blocks;
     protected ObjectArrayList<byte[]> firstKeys;
     protected IntArrayList offsets;
 
+    protected BloomFilter filter;
+
     public SSTable() {
-        this(DEFAULT_BLOCK_SIZE);
+        this(DEFAULT_BLOCK_SIZE, DEFAULT_EXPECTED_ELEMENTS);
     }
 
-    public SSTable(int blockSize) {
+    public SSTable(int numElements) {
+        this(DEFAULT_BLOCK_SIZE, numElements);
+    }
+
+    public SSTable(int blockSize, int numElements) {
         this.blockSize = blockSize;
         blocks = new ObjectArrayList<>();
         firstKeys = new ObjectArrayList<>();
         offsets = new IntArrayList();
+        filter = new BloomFilter(numElements);
+        this.numElements = numElements;
     }
 
     public void put(byte[] key, byte[] value) {
@@ -35,17 +46,12 @@ public class SSTable {
             firstKeys.add(key);
             last.add(key, value);
         }
+
+        filter.add(key);
     }
 
     public byte[] get(byte[] key) {
-        if (mightContain(key))
-            return search(key);
-
-        return null;
-    }
-
-    private boolean mightContain(byte[] key) {
-        return true;
+        return filter.contains(key) ? search(key) : null;
     }
 
     private byte[] search(byte[] key) {
@@ -63,6 +69,10 @@ public class SSTable {
         }
 
         return null;
+    }
+
+    public int size() {
+        return numElements;
     }
 
     private Block addNewBlock() {

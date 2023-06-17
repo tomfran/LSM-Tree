@@ -10,7 +10,6 @@ public class SkipList {
     protected final int levels;
     protected final RandomGenerator rn = RandomGenerator.getDefault();
     protected int size;
-    protected int nonNullSize;
 
     public SkipList(int levels) {
         if (levels < 1)
@@ -18,6 +17,7 @@ public class SkipList {
 
         this.levels = levels;
         this.sentinel = new Node(null, null, new Node[levels]);
+        this.size = 0;
     }
 
     private int compare(byte[] a, byte[] b) {
@@ -51,9 +51,8 @@ public class SkipList {
 
             nextLevel = (rn.nextInt(0, 10) % 2) == 1;
         }
+
         size++;
-        if (value != null)
-            nonNullSize++;
     }
 
     public byte[] get(byte[] key) {
@@ -70,7 +69,7 @@ public class SkipList {
 
     public void delete(byte[] key) {
         put(key, null);
-        nonNullSize--;
+        size -= 2;
     }
 
     public int size() {

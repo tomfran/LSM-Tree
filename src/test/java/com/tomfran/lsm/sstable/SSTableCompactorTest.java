@@ -1,6 +1,5 @@
-package com.tomfran.lsm.compactor;
+package com.tomfran.lsm.sstable;
 
-import com.tomfran.lsm.sstable.SSTable;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 

@@ -7,19 +7,19 @@ class LSMTreeTest {
     LSMTree tree;
 
     @Test
-    public void f() {
+    public void syncAndFlushTest() {
         tree = new LSMTree();
 
         for (int i = 20; i < 100; i++)
             tree.put(new byte[]{(byte) i}, new byte[]{(byte) (i + 1)});
 
-        tree.flushLastMemtable();
-        tree.addMemtable();
+        tree.sync();
+        tree.flushLastImmutableMemtable();
 
         for (int i = 10; i < 20; i++)
             tree.put(new byte[]{(byte) i}, new byte[]{(byte) (i + 1)});
 
-        tree.addMemtable();
+        tree.sync();
 
         for (int i = 0; i < 10; i++)
             tree.put(new byte[]{(byte) i}, new byte[]{(byte) (i + 1)});
@@ -34,6 +34,5 @@ class LSMTreeTest {
 
         assert tree.get(new byte[]{(byte) 100}) == null;
     }
-
 
 }

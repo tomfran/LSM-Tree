@@ -27,7 +27,8 @@ public class Memtable {
 
     public SSTable flush() {
         Iterator it = iterator();
-        SSTable table = new SSTable();
+
+        SSTable table = new SSTable(list.size());
 
         while (it.hasNext()) {
             it.next();
