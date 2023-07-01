@@ -19,7 +19,7 @@ public class LSMTreeBenchmark {
     public static void main(String[] args) {
 
         generateRandomData();
-        LSMTree tree = new LSMTree();
+        LSMTree tree = new LSMTree(false, 0, 0);
 
         long start, end;
 

@@ -21,6 +21,10 @@ public class Memtable {
         return list.get(key);
     }
 
+    public int size() {
+        return list.size();
+    }
+
     public Iterator iterator() {
         return new SkipListIterator(list);
     }

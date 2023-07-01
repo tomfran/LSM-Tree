@@ -9,16 +9,31 @@ import java.util.LinkedList;
 
 public class LSMTree {
 
+    static final int DEFAULT_SYNC_INTERVAL_MILLIS = 2000;
+    static final int DEFAULT_SIZE_THRESHOLD = 100;
     private final Object memtableLock = new Object();
     private final Object ssTablesLock = new Object();
     Memtable memtable;
     LinkedList<Memtable> immutableMemtables;
     ObjectArrayList<LinkedList<SSTable>> ssTables;
 
+    int memtableSizeThreshold;
+
+    MemtableSynchronizer memtableSynchronizer;
+
     public LSMTree() {
+        this(true, DEFAULT_SYNC_INTERVAL_MILLIS, DEFAULT_SIZE_THRESHOLD);
+    }
+
+    public LSMTree(boolean memtableSync, int syncIntervalMillis, int sizeThreshold) {
         memtable = new Memtable();
         immutableMemtables = new LinkedList<>();
         ssTables = new ObjectArrayList<>();
+
+        if (memtableSync) {
+            memtableSynchronizer = new MemtableSynchronizer(this, syncIntervalMillis, sizeThreshold);
+            memtableSynchronizer.start();
+        }
     }
 
     public void put(byte[] key, byte[] value) {
@@ -83,8 +98,14 @@ public class LSMTree {
 
         synchronized (ssTablesLock) {
             ssTables.get(level).clear();
-            ssTables.get(level).addFirst(compacted);
+            if (level + 1 >= ssTables.size())
+                ssTables.add(new LinkedList<>());
+            ssTables.get(level + 1).addFirst(compacted);
         }
     }
 
+    public void stop() {
+        if (memtableSynchronizer != null)
+            memtableSynchronizer.stop();
+    }
 }
