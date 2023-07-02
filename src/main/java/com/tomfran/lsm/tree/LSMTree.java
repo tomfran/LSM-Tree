@@ -9,35 +9,59 @@ import java.util.LinkedList;
 
 public class LSMTree {
 
+    /* Default sync and compaction parameters */
     static final int DEFAULT_SYNC_INTERVAL_MILLIS = 2000;
     static final int DEFAULT_SIZE_THRESHOLD = 100;
+    static final int DEFAULT_LEVEL_SIZE_THRESHOLD = 10;
+    static final int DEFAULT_COMPACTION_INTERVAL_MILLS = 2000;
+
+    /* Active and immutable Memtables */
     private final Object memtableLock = new Object();
-    private final Object ssTablesLock = new Object();
     Memtable memtable;
     LinkedList<Memtable> immutableMemtables;
+    int memtableSizeLimit;
+
+    /* SSTables */
+    private final Object ssTablesLock = new Object();
     ObjectArrayList<LinkedList<SSTable>> ssTables;
 
-    int memtableSizeThreshold;
-
+    /* Background threads */
     MemtableSynchronizer memtableSynchronizer;
+    LevelCompactor levelCompactor;
 
     public LSMTree() {
-        this(true, DEFAULT_SYNC_INTERVAL_MILLIS, DEFAULT_SIZE_THRESHOLD);
+        this(true, DEFAULT_SYNC_INTERVAL_MILLIS, DEFAULT_SIZE_THRESHOLD,
+                true, DEFAULT_COMPACTION_INTERVAL_MILLS, DEFAULT_LEVEL_SIZE_THRESHOLD);
     }
 
-    public LSMTree(boolean memtableSync, int syncIntervalMillis, int sizeThreshold) {
+    public LSMTree(boolean memtableSyncEnabled,
+                   int syncIntervalMillis,
+                   int inMemorySizeLimit,
+                   boolean levelCompactionEnabled,
+                   int compactionIntervalMillis,
+                   int levelSizeThreshold) {
+
         memtable = new Memtable();
+        memtableSizeLimit = inMemorySizeLimit;
         immutableMemtables = new LinkedList<>();
         ssTables = new ObjectArrayList<>();
 
-        if (memtableSync) {
-            memtableSynchronizer = new MemtableSynchronizer(this, syncIntervalMillis, sizeThreshold);
+        if (memtableSyncEnabled) {
+            memtableSynchronizer = new MemtableSynchronizer(this, syncIntervalMillis);
             memtableSynchronizer.start();
+        }
+
+        if (levelCompactionEnabled) {
+            levelCompactor = new LevelCompactor(this, compactionIntervalMillis, levelSizeThreshold);
+            levelCompactor.start();
         }
     }
 
     public void put(byte[] key, byte[] value) {
         memtable.put(key, value);
+
+        if (memtable.size() >= memtableSizeLimit)
+            sync();
     }
 
     public byte[] get(byte[] key) {
@@ -49,19 +73,15 @@ public class LSMTree {
         }
 
         synchronized (ssTablesLock) {
-            for (Memtable m : immutableMemtables) {
+            for (Memtable m : immutableMemtables)
                 if ((value = m.get(key)) != null)
                     return value;
-            }
 
-            for (LinkedList<SSTable> tables : ssTables) {
-                for (SSTable table : tables) {
+            for (LinkedList<SSTable> tables : ssTables)
+                for (SSTable table : tables)
                     if ((value = table.get(key)) != null)
                         return value;
-                }
-            }
         }
-
         return null;
     }
 
@@ -107,5 +127,7 @@ public class LSMTree {
     public void stop() {
         if (memtableSynchronizer != null)
             memtableSynchronizer.stop();
+        if (levelCompactor != null)
+            levelCompactor.stop();
     }
 }

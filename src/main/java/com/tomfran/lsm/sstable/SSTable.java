@@ -9,7 +9,7 @@ import static java.util.Arrays.compare;
 
 public class SSTable {
 
-    static final int DEFAULT_BLOCK_SIZE = 1024;
+    static final int DEFAULT_BLOCK_SIZE = 2048;
     static final int DEFAULT_EXPECTED_ELEMENTS = 10_000;
 
     protected int blockSize;

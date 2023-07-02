@@ -1,37 +1,19 @@
 package com.tomfran.lsm.tree;
 
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
-
-public class MemtableSynchronizer {
+public class MemtableSynchronizer extends BackgroundExecutor {
 
     LSMTree tree;
-    int syncIntervalMills;
-    int sizeThreshold;
-    ScheduledExecutorService executor;
 
-    public MemtableSynchronizer(LSMTree tree, int syncIntervalMillis, int sizeThreshold) {
+    public MemtableSynchronizer(LSMTree tree, int syncIntervalMillis) {
+        super(syncIntervalMillis);
         this.tree = tree;
-        this.syncIntervalMills = syncIntervalMillis;
-        this.sizeThreshold = sizeThreshold;
-        this.executor = Executors.newSingleThreadScheduledExecutor();
-    }
-
-    public void start() {
-        executor.scheduleAtFixedRate(this::sync, syncIntervalMills, syncIntervalMills, TimeUnit.MILLISECONDS);
+        setRunnable(this::sync);
     }
 
     private void sync() {
-        if (tree.memtable.size() > sizeThreshold) {
-            System.out.println(">> SYNCING MEMTABLE");
-            tree.sync();
+        if (!tree.immutableMemtables.isEmpty()) {
+            System.out.println(">> Syncing oldest immutable memtable");
             tree.flushLastImmutableMemtable();
         }
     }
-
-    public void stop() {
-        executor.shutdown();
-    }
-
 }
