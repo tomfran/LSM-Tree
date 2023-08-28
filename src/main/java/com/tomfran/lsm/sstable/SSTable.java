@@ -1,117 +1,128 @@
 package com.tomfran.lsm.sstable;
 
-import com.tomfran.lsm.block.Block;
-import com.tomfran.lsm.iterator.Iterator;
-import it.unimi.dsi.fastutil.ints.IntArrayList;
+import com.google.common.hash.BloomFilter;
+import com.tomfran.lsm.io.ItemsInputStream;
+import com.tomfran.lsm.io.ItemsOutputStream;
+import com.tomfran.lsm.types.Item;
+import it.unimi.dsi.fastutil.longs.LongArrayList;
 import it.unimi.dsi.fastutil.objects.ObjectArrayList;
 
-import static java.util.Arrays.compare;
+import java.util.Iterator;
+
+import static com.tomfran.lsm.comparator.ByteArrayComparator.compare;
 
 public class SSTable {
 
-    static final int DEFAULT_BLOCK_SIZE = 2048;
-    static final int DEFAULT_EXPECTED_ELEMENTS = 10_000;
+    private final ItemsInputStream is;
 
-    protected int blockSize;
-    protected int numElements;
+    private LongArrayList sparseIndex;
+    private ObjectArrayList<byte[]> sparseKeys;
+    private BloomFilter<byte[]> bloomFilter;
 
-    protected ObjectArrayList<Block> blocks;
-    protected ObjectArrayList<byte[]> firstKeys;
-    protected IntArrayList offsets;
-
-    protected BloomFilter filter;
-
-    public SSTable() {
-        this(DEFAULT_BLOCK_SIZE, DEFAULT_EXPECTED_ELEMENTS);
+    /**
+     * Create a new SSTable from an Iterable of Items.
+     *
+     * @param filename   The filename to write the SSTable to.
+     * @param items      The items to write to the SSTable, assumed to be sorted.
+     * @param sampleSize The number of items to skip between sparse index entries.
+     * @param numItems   The number of items in the SSTable.
+     */
+    public SSTable(String filename, Iterable<Item> items, int sampleSize, int numItems) {
+        writeItems(filename, items, sampleSize, numItems);
+        is = new ItemsInputStream(filename);
     }
 
-    public SSTable(int numElements) {
-        this(DEFAULT_BLOCK_SIZE, numElements);
-    }
-
-    public SSTable(int blockSize, int numElements) {
-        this.blockSize = blockSize;
-        blocks = new ObjectArrayList<>();
-        firstKeys = new ObjectArrayList<>();
-        offsets = new IntArrayList();
-        filter = new BloomFilter(numElements);
-        this.numElements = numElements;
-    }
-
-    public void put(byte[] key, byte[] value) {
-        Block last = blocks.isEmpty() ? null : blocks.get(blocks.size() - 1);
-
-        if (last == null || !last.add(key, value)) {
-            last = addNewBlock();
-            firstKeys.add(key);
-            last.add(key, value);
-        }
-
-        filter.add(key);
-    }
-
-    public byte[] get(byte[] key) {
-        return filter.contains(key) ? search(key) : null;
-    }
-
-    private byte[] search(byte[] key) {
-        int blockIndex = getCandidateBlock(key);
-        if (blockIndex < 0)
+    /**
+     * Read an item from the SSTable.
+     *
+     * @param key The key of the item to read.
+     * @return The item with the given key, or null if no such item exists.
+     */
+    public Item getItem(byte[] key) {
+        if (!bloomFilter.mightContain(key))
             return null;
 
-        Block block = blocks.get(blockIndex);
-        Iterator it = block.iterator();
+        is.seek(getCandidateOffset(key));
 
-        while (it.hasNext()) {
-            it.next();
-            if (compare(key, it.key()) == 0)
-                return it.value();
-        }
+        Item it;
+        int cmp = -1;
 
-        return null;
+        while ((it = is.readItem()) != null && (cmp = compare(key, it.getKey())) > 0) ;
+
+        return cmp == 0 ? it : null;
     }
 
-    public int size() {
-        return numElements;
-    }
-
-    private Block addNewBlock() {
-        addOffset();
-
-        Block block = new Block(blockSize);
-        blocks.add(block);
-        return block;
-    }
-
-    private void addOffset() {
-        int previousOffset = offsets.isEmpty() ? 0 : offsets.getInt(offsets.size() - 1);
-        int lastBlockSize = blocks.isEmpty() ? 0 : blocks.get(blocks.size() - 1).getSize();
-        offsets.add(previousOffset + lastBlockSize);
-    }
-
-    private int getCandidateBlock(byte[] key) {
-        int i, j, m, comp;
-        i = 0;
-        j = firstKeys.size() - 1;
-        while (i < (j - 1)) {
-            m = (i + j) / 2;
-
-            comp = compare(key, firstKeys.get(m));
-            if (comp == 0)
-                return m;
-            else if (comp < 0)
-                j = m - 1;
-            else
-                i = m;
-        }
-        if (compare(key, firstKeys.get(j)) < 0)
-            return i;
-        else
-            return j;
-    }
-
-    public SSTableIterator iterator() {
+    public Iterator<Item> iterator() {
+        is.seek(0);
         return new SSTableIterator(this);
     }
 
+    /**
+     * Close the SSTable input stream.
+     */
+    public void close() {
+        is.close();
+    }
+
+    private long getCandidateOffset(byte[] key) {
+        int low = 0;
+        int high = sparseIndex.size() - 1;
+
+        while (low < (high - 1)) {
+            int mid = (low + high) / 2;
+            int cmp = compare(key, sparseKeys.get(mid));
+
+            if (cmp < 0)
+                high = mid - 1;
+            else if (cmp > 0)
+                low = mid;
+            else
+                return sparseIndex.getLong(mid);
+        }
+        return sparseIndex.getLong(low);
+    }
+
+    private void writeItems(String filename, Iterable<Item> items, int sampleSize, int numItems) {
+        ItemsOutputStream fos = new ItemsOutputStream(filename);
+
+        sparseIndex = new LongArrayList();
+        sparseKeys = new ObjectArrayList<>();
+        bloomFilter = BloomFilter.create((key, sink) -> sink.putBytes(key), numItems);
+
+        int size = 0;
+        long offset = 0L;
+
+        for (Item item : items) {
+            bloomFilter.put(item.getKey());
+
+            if (size % sampleSize == 0) {
+                sparseIndex.add(offset);
+                sparseKeys.add(item.getKey());
+            }
+
+            offset += fos.writeItem(item);
+            size++;
+        }
+
+        fos.close();
+    }
+
+    private static class SSTableIterator implements Iterator<Item> {
+
+        private final SSTable table;
+
+        public SSTableIterator(SSTable table) {
+            this.table = table;
+        }
+
+        @Override
+        public boolean hasNext() {
+            return table.is.hasNext();
+        }
+
+        @Override
+        public Item next() {
+            return table.is.readItem();
+        }
+    }
 }
