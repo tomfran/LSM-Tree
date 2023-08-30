@@ -4,6 +4,7 @@ import com.google.common.hash.BloomFilter;
 import com.tomfran.lsm.io.ItemsInputStream;
 import com.tomfran.lsm.io.ItemsOutputStream;
 import com.tomfran.lsm.types.Item;
+import com.tomfran.lsm.utils.IteratorMerger;
 import it.unimi.dsi.fastutil.longs.LongArrayList;
 import it.unimi.dsi.fastutil.objects.ObjectArrayList;
 
@@ -14,6 +15,7 @@ import static com.tomfran.lsm.comparator.ByteArrayComparator.compare;
 public class SSTable {
 
     private final ItemsInputStream is;
+    private int size;
 
     private LongArrayList sparseIndex;
     private ObjectArrayList<byte[]> sparseKeys;
@@ -47,7 +49,7 @@ public class SSTable {
         Item it;
         int cmp = -1;
 
-        while ((it = is.readItem()) != null && (cmp = compare(key, it.getKey())) > 0) ;
+        while ((it = is.readItem()) != null && (cmp = compare(key, it.key())) > 0) ;
 
         return cmp == 0 ? it : null;
     }
@@ -55,6 +57,20 @@ public class SSTable {
     public Iterator<Item> iterator() {
         is.seek(0);
         return new SSTableIterator(this);
+    }
+
+    public SSTable merge(String filename, SSTable... tables) {
+
+        int newSize = 0;
+        Iterator<Item>[] iterators = new Iterator[tables.length];
+        for (int i = 0; i < tables.length; i++) {
+            iterators[i] = tables[i].iterator();
+            newSize += tables[i].size;
+        }
+
+        SSTableMergerIterator it = new SSTableMergerIterator(iterators);
+
+        return new SSTable(filename, it, newSize / 100, newSize);
     }
 
     /**
@@ -93,16 +109,18 @@ public class SSTable {
         long offset = 0L;
 
         for (Item item : items) {
-            bloomFilter.put(item.getKey());
+            bloomFilter.put(item.key());
 
             if (size % sampleSize == 0) {
                 sparseIndex.add(offset);
-                sparseKeys.add(item.getKey());
+                sparseKeys.add(item.key());
             }
 
             offset += fos.writeItem(item);
             size++;
         }
+
+        this.size = size;
 
         fos.close();
     }
@@ -125,4 +143,32 @@ public class SSTable {
             return table.is.readItem();
         }
     }
+
+    private static class SSTableMergerIterator extends IteratorMerger<Item> implements Iterable<Item> {
+
+        private Item last, next;
+
+        @SafeVarargs
+        public SSTableMergerIterator(Iterator<Item>... iterators) {
+            super((a, b) -> compare(a.key(), b.key()), iterators);
+            last = next();
+        }
+
+        @Override
+        public Item next() {
+            next = super.next();
+            while (compare(last.key(), next.key()) == 0)
+                next = super.next();
+
+            Item toReturn = last;
+            last = next;
+            return toReturn;
+        }
+
+        @Override
+        public Iterator<Item> iterator() {
+            return this;
+        }
+    }
+
 }

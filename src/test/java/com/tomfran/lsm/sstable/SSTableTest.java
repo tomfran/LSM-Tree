@@ -35,7 +35,7 @@ class SSTableTest {
         }
 
         items = l.stream()
-                .sorted((a, b) -> ByteArrayComparator.compare(a.getKey(), b.getKey()))
+                .sorted((a, b) -> ByteArrayComparator.compare(a.key(), b.key()))
                 .toList();
 
         t = new SSTable(TEST_FILE, items, 100, items.size());
@@ -50,10 +50,10 @@ class SSTableTest {
     @Test
     public void shouldFindItems() {
         for (var item : items) {
-            var it = t.getItem(item.getKey());
+            var it = t.getItem(item.key());
             assert it != null;
-            assert compare(item.getKey(), it.getKey()) == 0;
-            assert compare(item.getValue(), it.getValue()) == 0;
+            assert compare(item.key(), it.key()) == 0;
+            assert compare(item.value(), it.value()) == 0;
         }
     }
 
@@ -65,8 +65,8 @@ class SSTableTest {
         while (it.hasNext()) {
             var a = it.next();
             var b = it2.next();
-            assert compare(a.getKey(), b.getKey()) == 0;
-            assert compare(a.getValue(), b.getValue()) == 0;
+            assert compare(a.key(), b.key()) == 0;
+            assert compare(a.value(), b.value()) == 0;
         }
 
         assert !it2.hasNext();
