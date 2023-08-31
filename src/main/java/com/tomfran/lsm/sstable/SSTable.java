@@ -1,6 +1,5 @@
 package com.tomfran.lsm.sstable;
 
-import com.google.common.hash.BloomFilter;
 import com.tomfran.lsm.io.ItemsInputStream;
 import com.tomfran.lsm.io.ItemsOutputStream;
 import com.tomfran.lsm.types.Item;
@@ -19,7 +18,6 @@ public class SSTable {
 
     private LongArrayList sparseIndex;
     private ObjectArrayList<byte[]> sparseKeys;
-    private BloomFilter<byte[]> bloomFilter;
 
     /**
      * Create a new SSTable from an Iterable of Items.
@@ -34,32 +32,7 @@ public class SSTable {
         is = new ItemsInputStream(filename);
     }
 
-    /**
-     * Read an item from the SSTable.
-     *
-     * @param key The key of the item to read.
-     * @return The item with the given key, or null if no such item exists.
-     */
-    public Item getItem(byte[] key) {
-        if (!bloomFilter.mightContain(key))
-            return null;
-
-        is.seek(getCandidateOffset(key));
-
-        Item it;
-        int cmp = -1;
-
-        while ((it = is.readItem()) != null && (cmp = compare(key, it.key())) > 0) ;
-
-        return cmp == 0 ? it : null;
-    }
-
-    public Iterator<Item> iterator() {
-        is.seek(0);
-        return new SSTableIterator(this);
-    }
-
-    public SSTable merge(String filename, SSTable... tables) {
+    static SSTable merge(String filename, int sampleSize, SSTable... tables) {
 
         int newSize = 0;
         Iterator<Item>[] iterators = new Iterator[tables.length];
@@ -70,7 +43,34 @@ public class SSTable {
 
         SSTableMergerIterator it = new SSTableMergerIterator(iterators);
 
-        return new SSTable(filename, it, newSize / 100, newSize);
+        return new SSTable(filename, it, sampleSize, newSize);
+    }
+
+    /**
+     * Read an item from the SSTable.
+     *
+     * @param key The key of the item to read.
+     * @return The item with the given key, or null if no such item exists.
+     */
+    public Item getItem(byte[] key) {
+        is.seek(getCandidateOffset(key));
+
+        Item it;
+        int cmp = -1;
+
+        while ((it = is.readItem()) != null && (cmp = compare(key, it.key())) > 0) ;
+
+        return cmp == 0 ? it : null;
+    }
+
+    /**
+     * Get an iterator over the items in the SSTable.
+     *
+     * @return Table iterator
+     */
+    public Iterator<Item> iterator() {
+        is.seek(0);
+        return new SSTableIterator(this);
     }
 
     /**
@@ -103,14 +103,11 @@ public class SSTable {
 
         sparseIndex = new LongArrayList();
         sparseKeys = new ObjectArrayList<>();
-        bloomFilter = BloomFilter.create((key, sink) -> sink.putBytes(key), numItems);
 
         int size = 0;
         long offset = 0L;
 
         for (Item item : items) {
-            bloomFilter.put(item.key());
-
             if (size % sampleSize == 0) {
                 sparseIndex.add(offset);
                 sparseKeys.add(item.key());
@@ -144,6 +141,13 @@ public class SSTable {
         }
     }
 
+    /**
+     * SSTableMergerIterator is an IteratorMerger that merges SSTables.
+     * <p>
+     * When merging SSTables, we want to skip over duplicate keys. This is done by
+     * keeping track of the last key we saw, and skipping over any keys that are
+     * equal to the last key.
+     */
     private static class SSTableMergerIterator extends IteratorMerger<Item> implements Iterable<Item> {
 
         private Item last, next;
@@ -151,17 +155,23 @@ public class SSTable {
         @SafeVarargs
         public SSTableMergerIterator(Iterator<Item>... iterators) {
             super((a, b) -> compare(a.key(), b.key()), iterators);
-            last = next();
+            last = super.next();
+        }
+
+        @Override
+        public boolean hasNext() {
+            return last != null;
         }
 
         @Override
         public Item next() {
             next = super.next();
-            while (compare(last.key(), next.key()) == 0)
+            while (next != null && compare(last.key(), next.key()) == 0)
                 next = super.next();
 
             Item toReturn = last;
             last = next;
+
             return toReturn;
         }
 

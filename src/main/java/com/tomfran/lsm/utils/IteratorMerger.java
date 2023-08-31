@@ -9,6 +9,10 @@ import java.util.Iterator;
 
 /**
  * Merges multiple sorted Iterators into a single sorted Iterator.
+ * <p>
+ * Time complexity to read a single element is O(log n) where n is the number of Iterators.
+ * <p>
+ * Reads after the last element of the last Iterator will return null.
  *
  * @param <T> The type of the elements in the Iterators.
  */
@@ -38,6 +42,9 @@ public class IteratorMerger<T> implements Iterator<T> {
 
     @Override
     public T next() {
+        if (queue.isEmpty())
+            return null;
+
         Pair<T, Integer> top = queue.dequeue();
 
         T result = top.first();

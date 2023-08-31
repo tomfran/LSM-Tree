@@ -24,7 +24,8 @@ It is immutable and append-only.
 - [ ] SSTable
     - [x] Init
     - [x] Read
-    - [ ] Compaction
+    - [x] Compaction
+    - [ ] Bloom filter
     - [ ] Compression
 - [ ] Memtable
 - [ ] LSM tree

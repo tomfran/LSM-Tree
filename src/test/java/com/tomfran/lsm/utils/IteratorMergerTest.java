@@ -29,6 +29,8 @@ class IteratorMergerTest {
             assert merger.next() == expected : "Expected " + expected + " but got " + (expected - 1);
             expected++;
         }
+
+        assert merger.next() == null;
     }
 
 }
