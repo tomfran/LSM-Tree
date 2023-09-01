@@ -25,7 +25,7 @@ It is immutable and append-only.
     - [x] Init
     - [x] Read
     - [x] Compaction
+    - [x] Ints compression
     - [ ] Bloom filter
-    - [ ] Compression
 - [ ] Memtable
-- [ ] LSM tree
+- [ ] Tree

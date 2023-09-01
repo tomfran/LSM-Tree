@@ -1,19 +1,10 @@
 package com.tomfran.lsm.types;
 
+import java.util.Arrays;
+
 public record Item(byte[] key, byte[] value) {
-
     @Override
-    public String toString() {
-        StringBuilder sb = new StringBuilder();
-        sb.append("key: ");
-        for (byte b : key) {
-            sb.append(String.format("%8s", Integer.toBinaryString(b & 0xFF)).replace(' ', '0'));
-        }
-        sb.append(" value: ");
-        for (byte b : value) {
-            sb.append(String.format("%8s", Integer.toBinaryString(b & 0xFF)).replace(' ', '0'));
-        }
-        return sb.toString();
+    public int hashCode() {
+        return Arrays.hashCode(key);
     }
-
 }

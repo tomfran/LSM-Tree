@@ -9,8 +9,8 @@ import org.junit.jupiter.api.Test;
 
 import java.io.File;
 import java.util.List;
-import java.util.Random;
 
+import static com.tomfran.lsm.TestUtils.getRandomItem;
 import static com.tomfran.lsm.comparator.ByteArrayComparator.compare;
 
 class SSTableTest {
@@ -23,15 +23,9 @@ class SSTableTest {
     @BeforeAll
     public static void setup() {
 
-        Random rn = new Random();
         var l = new ObjectOpenHashSet<Item>();
-
         for (int i = 0; i < 10000; i++) {
-            byte[] key = new byte[rn.nextInt(10, 500)];
-            byte[] value = new byte[rn.nextInt(10, 500)];
-            rn.nextBytes(key);
-            rn.nextBytes(value);
-            l.add(new Item(key, value));
+            l.add(getRandomItem());
         }
 
         items = l.stream()

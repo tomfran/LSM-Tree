@@ -1,13 +1,16 @@
 package com.tomfran.lsm.io;
 
 import com.tomfran.lsm.types.Item;
+import it.unimi.dsi.fastutil.objects.ObjectArrayList;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
 import java.io.File;
+import java.util.stream.IntStream;
 
-import static com.tomfran.lsm.comparator.ByteArrayComparator.compare;
+import static com.tomfran.lsm.TestUtils.assertItemEquals;
+import static com.tomfran.lsm.TestUtils.getRandomItem;
 
 class ItemsStreamsTest {
 
@@ -16,12 +19,20 @@ class ItemsStreamsTest {
     static ItemsInputStream in;
     static ItemsOutputStream out;
 
+    static ObjectArrayList<Item> items;
+
     @BeforeAll
     public static void setup() {
         out = new ItemsOutputStream(FILENAME);
 
-        Item item = new Item(new byte[]{1, 2, 3}, new byte[]{4, 5, 6});
-        out.writeItem(item);
+        items = new ObjectArrayList<>();
+
+        IntStream.range(0, 1000)
+                .mapToObj(i -> getRandomItem())
+                .forEach(e -> {
+                    items.add(e);
+                    out.writeItem(e);
+                });
 
         out.close();
 
@@ -38,10 +49,11 @@ class ItemsStreamsTest {
 
     @Test
     public void shouldReadItem() {
-        Item item = in.readItem();
-        assert item != null;
-        assert compare(item.key(), new byte[]{1, 2, 3}) == 0;
-        assert compare(item.value(), new byte[]{4, 5, 6}) == 0;
+        for (var item : items) {
+            var it = in.readItem();
+            assert it != null;
+            assertItemEquals(item, it);
+        }
     }
 
 }

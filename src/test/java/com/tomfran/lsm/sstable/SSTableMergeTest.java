@@ -9,7 +9,7 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
-import static com.tomfran.lsm.comparator.ByteArrayComparator.compare;
+import static com.tomfran.lsm.TestUtils.assertItemEquals;
 
 public class SSTableMergeTest {
 
@@ -66,8 +66,7 @@ public class SSTableMergeTest {
         for (var item : expectedItems) {
             var it = merge.getItem(item.key());
             assert it != null;
-            assert compare(item.key(), it.key()) == 0;
-            assert compare(item.value(), it.value()) == 0;
+            assertItemEquals(item, it);
         }
     }
 
@@ -79,8 +78,7 @@ public class SSTableMergeTest {
         while (it.hasNext()) {
             var item = it.next();
             var expected = expectedItems.get(i++);
-            assert compare(item.key(), expected.key()) == 0;
-            assert compare(item.value(), expected.value()) == 0;
+            assertItemEquals(expected, item);
         }
 
         assert i == expectedItems.size() : "expected " + expectedItems.size() + " items, got " + i;
