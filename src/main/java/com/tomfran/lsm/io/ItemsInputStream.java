@@ -13,6 +13,7 @@ public class ItemsInputStream {
     public ItemsInputStream(String filename) {
         try {
             fis = new FastBufferedInputStream(new FileInputStream(filename));
+            fis.position(0);
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
@@ -20,8 +21,8 @@ public class ItemsInputStream {
 
     public Item readItem() {
         try {
-            int keyLength = readInt();
-            int valueLength = readInt();
+            int keyLength = readVByteInt();
+            int valueLength = readVByteInt();
 
             return new Item(
                     fis.readNBytes(keyLength),
@@ -32,12 +33,20 @@ public class ItemsInputStream {
         }
     }
 
-    public int readInt() throws IOException {
-        byte[] buffer = fis.readNBytes(4);
-        return (buffer[0] & 0xFF) << 24 |
-                (buffer[1] & 0xFF) << 16 |
-                (buffer[2] & 0xFF) << 8 |
-                (buffer[3] & 0xFF);
+    protected int readVByteInt() throws IOException {
+        int result = 0;
+        byte[] b;
+        int shift = 0;
+        while (true) {
+            b = fis.readNBytes(1);
+            result |= (((int) b[0] & 0x7F) << shift);
+
+            if ((b[0] & 0x80) == 0x80) {
+                break;
+            }
+            shift += 7;
+        }
+        return result;
     }
 
     public void close() {
