@@ -2,7 +2,9 @@ package com.tomfran.lsm;
 
 import com.tomfran.lsm.types.Item;
 
+import java.util.List;
 import java.util.Random;
+import java.util.stream.IntStream;
 
 import static com.tomfran.lsm.comparator.ByteArrayComparator.compare;
 
@@ -23,6 +25,12 @@ public class TestUtils {
         byte[] bytes = new byte[rn.nextInt(MIN_BYTES_LENGTH, MAX_BYTES_LENGTH)];
         rn.nextBytes(bytes);
         return bytes;
+    }
+
+    public static List<byte[]> getRandomByteArrayList(int size) {
+        return IntStream.range(0, size)
+                .mapToObj(i -> getRandomByteArray())
+                .toList();
     }
 
     public static void assertItemEquals(Item a, Item b) {

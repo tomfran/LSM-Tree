@@ -1,5 +1,6 @@
 package com.tomfran.lsm.sstable;
 
+import com.tomfran.lsm.bloom.BloomFilter;
 import com.tomfran.lsm.io.ItemsInputStream;
 import com.tomfran.lsm.io.ItemsOutputStream;
 import com.tomfran.lsm.types.Item;
@@ -18,6 +19,7 @@ public class SSTable {
 
     private LongArrayList sparseIndex;
     private ObjectArrayList<byte[]> sparseKeys;
+    private BloomFilter bloomFilter;
 
     /**
      * Create a new SSTable from an Iterable of Items.
@@ -53,6 +55,9 @@ public class SSTable {
      * @return The item with the given key, or null if no such item exists.
      */
     public Item getItem(byte[] key) {
+        if (!bloomFilter.mightContain(key))
+            return null;
+
         is.seek(getCandidateOffset(key));
 
         Item it;
@@ -103,6 +108,7 @@ public class SSTable {
 
         sparseIndex = new LongArrayList();
         sparseKeys = new ObjectArrayList<>();
+        bloomFilter = new BloomFilter(numItems);
 
         int size = 0;
         long offset = 0L;
@@ -112,11 +118,11 @@ public class SSTable {
                 sparseIndex.add(offset);
                 sparseKeys.add(item.key());
             }
+            bloomFilter.add(item.key());
 
             offset += fos.writeItem(item);
             size++;
         }
-
         this.size = size;
 
         fos.close();

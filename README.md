@@ -26,6 +26,8 @@ It is immutable and append-only.
     - [x] Read
     - [x] Compaction
     - [x] Ints compression
-    - [ ] Bloom filter
+    - [x] Bloom filter
+    - [ ] Indexes persistence
+    - [ ] File initialization
 - [ ] Memtable
 - [ ] Tree

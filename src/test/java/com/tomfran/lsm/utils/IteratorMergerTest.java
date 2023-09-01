@@ -21,7 +21,7 @@ class IteratorMergerTest {
 
         IteratorMerger<Integer> merger = new IteratorMerger<>(
                 Integer::compareTo,
-                iteratorList.toArray(Iterator[]::new)
+                iteratorList.<Iterator<Integer>>toArray(Iterator[]::new)
         );
 
         int expected = 0;
