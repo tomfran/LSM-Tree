@@ -1,7 +1,9 @@
 package com.tomfran.lsm;
 
+import com.tomfran.lsm.sstable.SSTable;
 import com.tomfran.lsm.types.Item;
 
+import java.io.File;
 import java.util.List;
 import java.util.Random;
 import java.util.stream.IntStream;
@@ -36,5 +38,15 @@ public class TestUtils {
     public static void assertItemEquals(Item a, Item b) {
         assert compare(a.key(), b.key()) == 0;
         assert compare(a.value(), b.value()) == 0;
+    }
+
+    public static void deleteFile(String filename) {
+        new File(filename).delete();
+    }
+
+    public static void deleteSSTableFiles(String baseFilename) {
+        deleteFile(baseFilename + SSTable.DATA_FILE_EXTENSION);
+        deleteFile(baseFilename + SSTable.BLOOM_FILE_EXTENSION);
+        deleteFile(baseFilename + SSTable.INDEX_FILE_EXTENSION);
     }
 }

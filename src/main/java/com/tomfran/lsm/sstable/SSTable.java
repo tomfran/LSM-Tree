@@ -1,6 +1,7 @@
 package com.tomfran.lsm.sstable;
 
 import com.tomfran.lsm.bloom.BloomFilter;
+import com.tomfran.lsm.io.BaseOutputStream;
 import com.tomfran.lsm.io.ItemsInputStream;
 import com.tomfran.lsm.io.ItemsOutputStream;
 import com.tomfran.lsm.types.Item;
@@ -13,6 +14,10 @@ import java.util.Iterator;
 import static com.tomfran.lsm.comparator.ByteArrayComparator.compare;
 
 public class SSTable {
+
+    public static final String DATA_FILE_EXTENSION = ".data";
+    public static final String BLOOM_FILE_EXTENSION = ".bloom";
+    public static final String INDEX_FILE_EXTENSION = ".index";
 
     private final ItemsInputStream is;
     private int size;
@@ -31,7 +36,7 @@ public class SSTable {
      */
     public SSTable(String filename, Iterable<Item> items, int sampleSize, int numItems) {
         writeItems(filename, items, sampleSize, numItems);
-        is = new ItemsInputStream(filename);
+        is = new ItemsInputStream(filename + DATA_FILE_EXTENSION);
     }
 
     static SSTable merge(String filename, int sampleSize, SSTable... tables) {
@@ -104,15 +109,15 @@ public class SSTable {
     }
 
     private void writeItems(String filename, Iterable<Item> items, int sampleSize, int numItems) {
-        ItemsOutputStream fos = new ItemsOutputStream(filename);
+        ItemsOutputStream ios = new ItemsOutputStream(filename + DATA_FILE_EXTENSION);
 
         sparseIndex = new LongArrayList();
         sparseKeys = new ObjectArrayList<>();
         bloomFilter = new BloomFilter(numItems);
 
+        // write items and populate indexes
         int size = 0;
         long offset = 0L;
-
         for (Item item : items) {
             if (size % sampleSize == 0) {
                 sparseIndex.add(offset);
@@ -120,12 +125,31 @@ public class SSTable {
             }
             bloomFilter.add(item.key());
 
-            offset += fos.writeItem(item);
+            offset += ios.writeItem(item);
             size++;
         }
+        ios.close();
+
         this.size = size;
 
-        fos.close();
+        // write bloom filter and index to disk
+        bloomFilter.writeToFile(filename + BLOOM_FILE_EXTENSION);
+
+        BaseOutputStream indexOs = new BaseOutputStream(filename + INDEX_FILE_EXTENSION);
+        indexOs.writeLong(sparseIndex.size());
+
+        long prev = 0L;
+        for (long off : sparseIndex) {
+            indexOs.writeVByteLong(off - prev);
+            prev = off;
+        }
+
+        for (byte[] key : sparseKeys) {
+            indexOs.writeVByteInt(key.length);
+            indexOs.write(key);
+        }
+
+        indexOs.close();
     }
 
     private static class SSTableIterator implements Iterator<Item> {

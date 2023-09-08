@@ -7,15 +7,15 @@ import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
-import java.io.File;
 import java.util.List;
 
+import static com.tomfran.lsm.TestUtils.deleteSSTableFiles;
 import static com.tomfran.lsm.TestUtils.getRandomItem;
 import static com.tomfran.lsm.comparator.ByteArrayComparator.compare;
 
 class SSTableTest {
 
-    static final String TEST_FILE = "test.sst";
+    static final String TEST_FILE = "test";
 
     static SSTable t;
     static List<Item> items;
@@ -38,7 +38,7 @@ class SSTableTest {
     @AfterAll
     public static void teardown() {
         t.close();
-        new File(TEST_FILE).delete();
+        deleteSSTableFiles(TEST_FILE);
     }
 
     @Test

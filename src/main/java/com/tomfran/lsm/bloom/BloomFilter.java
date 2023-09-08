@@ -1,6 +1,8 @@
 package com.tomfran.lsm.bloom;
 
 
+import com.tomfran.lsm.io.BaseInputStream;
+import com.tomfran.lsm.io.BaseOutputStream;
 import it.unimi.dsi.fastutil.longs.LongLongMutablePair;
 import it.unimi.dsi.fastutil.longs.LongLongPair;
 import org.apache.commons.codec.digest.MurmurHash3;
@@ -20,9 +22,9 @@ import static java.lang.Math.log;
  */
 public class BloomFilter {
 
-    private final int size;
-    private final int hashCount;
-    private final long[] bits;
+    final int size;
+    final int hashCount;
+    final long[] bits;
 
     /**
      * Create a new Bloom filter with the given expected insertions and a false positive rate of 0.1%.
@@ -43,6 +45,43 @@ public class BloomFilter {
         this.size = (int) (-expectedInsertions * log(falsePositiveRate) / (log(2) * log(2)));
         this.hashCount = (int) ceil(-log(falsePositiveRate) / log(2));
         this.bits = new long[(int) ceil(size / 64.0)];
+    }
+
+    /**
+     * Create a new Bloom filter from the given parameters.
+     *
+     * @param size      The size of the Bloom filter in bits.
+     * @param hashCount The number of hash functions.
+     * @param bits      The bits of the Bloom filter.
+     */
+    public BloomFilter(int size, int hashCount, long[] bits) {
+        this.size = size;
+        this.hashCount = hashCount;
+        this.bits = bits;
+    }
+
+    /**
+     * Read a Bloom filter from the given file.
+     *
+     * @param filename The file to read from.
+     * @return The Bloom filter.
+     */
+    public static BloomFilter readFromFile(String filename) {
+        BaseInputStream is = new BaseInputStream(filename);
+        try {
+            int size = is.readVByteInt();
+            int hashCount = is.readVByteInt();
+            int bitsLength = is.readVByteInt();
+            long[] bits = new long[bitsLength];
+
+            for (int i = 0; i < bitsLength; i++)
+                bits[i] = is.readLong();
+
+            is.close();
+            return new BloomFilter(size, hashCount, bits);
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
     }
 
     /**
@@ -82,5 +121,24 @@ public class BloomFilter {
     private LongLongMutablePair getHash(byte[] key) {
         long[] hashes = MurmurHash3.hash128x64(key, 0, key.length, 0);
         return LongLongMutablePair.of(hashes[0], hashes[1]);
+    }
+
+    /**
+     * Write the Bloom filter to the given file.
+     *
+     * @param filename The file to write to.
+     */
+    public void writeToFile(String filename) {
+        BaseOutputStream os = new BaseOutputStream(filename);
+
+        os.writeVByteInt(size);
+        os.writeVByteInt(hashCount);
+
+        os.writeVByteInt(bits.length);
+
+        for (var b : bits)
+            os.writeLong(b);
+
+        os.close();
     }
 }

@@ -6,7 +6,7 @@ import org.junit.jupiter.api.RepeatedTest;
 
 import static com.tomfran.lsm.TestUtils.getRandomByteArrayList;
 
-class BloomFilterTest {
+class BloomFilterAccuracyTest {
 
     static final int INSERTIONS = 10000;
     static final double FALSE_POSITIVE_RATE = 0.01;

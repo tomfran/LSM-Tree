@@ -1,11 +1,11 @@
 package com.tomfran.lsm.sstable;
 
+import com.tomfran.lsm.TestUtils;
 import com.tomfran.lsm.types.Item;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
-import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -48,9 +48,7 @@ public class SSTableMergeTest {
         merge.close();
         first.close();
         second.close();
-
-        for (var file : List.of(MERGE_FILE, TABLE_1_FILE, TABLE_2_FILE))
-            new File(file).delete();
+        List.of(MERGE_FILE, TABLE_1_FILE, TABLE_2_FILE).forEach(TestUtils::deleteSSTableFiles);
     }
 
     private static List<Item> generateItems(int start, int end, boolean incr) {
