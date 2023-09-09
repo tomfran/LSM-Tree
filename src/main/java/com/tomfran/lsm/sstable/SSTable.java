@@ -110,12 +110,16 @@ public class SSTable {
         if (!bloomFilter.mightContain(key))
             return null;
 
-        is.seek(getCandidateOffset(key));
+        long offset = getCandidateOffset(key);
+        is.seek(offset);
 
         Item it;
-        int cmp = -1;
+        int cmp = 1;
 
-        while ((it = is.readItem()) != null && (cmp = compare(key, it.key())) > 0) ;
+        while ((it = is.readItem()) != null &&
+                it.key().length > 0 &&
+                (cmp = compare(key, it.key())) > 0) {
+        }
 
         return cmp == 0 ? it : null;
     }

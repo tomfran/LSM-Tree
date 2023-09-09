@@ -2,6 +2,7 @@ package com.tomfran.lsm.sstable;
 
 import com.tomfran.lsm.comparator.ByteArrayComparator;
 import com.tomfran.lsm.types.Item;
+import it.unimi.dsi.fastutil.objects.ObjectArrayList;
 import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
@@ -9,7 +10,6 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
 import java.nio.file.Path;
-import java.util.List;
 
 import static com.tomfran.lsm.TestUtils.getRandomItem;
 import static com.tomfran.lsm.comparator.ByteArrayComparator.compare;
@@ -17,24 +17,41 @@ import static com.tomfran.lsm.comparator.ByteArrayComparator.compare;
 class SSTableTest {
 
     static final String TEST_FILE = "/sstable";
+    static final int NUM_ITEMS = 100;
+    static final int SAMPLE_SIZE = NUM_ITEMS / 3;
+
     @TempDir
     static Path tempDirectory;
+
     static SSTable t;
-    static List<Item> items;
+    static ObjectArrayList<Item> inserted;
+    static ObjectArrayList<Item> skipped;
 
     @BeforeAll
     public static void setup() {
-
+        // generate random items
         var l = new ObjectOpenHashSet<Item>();
-        for (int i = 0; i < 10000; i++) {
+        for (int i = 0; i < NUM_ITEMS * 2; i++) {
             l.add(getRandomItem());
         }
 
-        items = l.stream()
+        // sort and divide into inserted and skipped
+        var items = l.stream()
                 .sorted((a, b) -> ByteArrayComparator.compare(a.key(), b.key()))
                 .toList();
 
-        t = new SSTable(tempDirectory + TEST_FILE, items, 100, items.size());
+        inserted = new ObjectArrayList<>();
+        skipped = new ObjectArrayList<>();
+
+        for (int i = 0; i < items.size(); i++) {
+            var e = items.get(i);
+            if (i % 2 == 0)
+                inserted.add(e);
+            else
+                skipped.add(e);
+        }
+
+        t = new SSTable(tempDirectory + TEST_FILE, inserted, SAMPLE_SIZE, inserted.size());
     }
 
     @AfterAll
@@ -44,7 +61,7 @@ class SSTableTest {
 
     @Test
     public void shouldFindItems() {
-        for (var item : items) {
+        for (var item : inserted) {
             var it = t.getItem(item.key());
             assert it != null;
             assert compare(item.key(), it.key()) == 0;
@@ -53,9 +70,15 @@ class SSTableTest {
     }
 
     @Test
+    public void shouldNotFind() {
+        for (var item : skipped)
+            assert t.getItem(item.key()) == null;
+    }
+
+    @Test
     public void iteratorTest() {
         var it = t.iterator();
-        var it2 = items.iterator();
+        var it2 = inserted.iterator();
 
         while (it.hasNext()) {
             var a = it.next();

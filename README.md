@@ -56,6 +56,25 @@ To save space, all integers are stored
 in [variable-length encoding](https://nlp.stanford.edu/IR-book/html/htmledition/variable-byte-codes-1.html),
 and offsets in the index are stored as [deltas](https://en.wikipedia.org/wiki/Delta_encoding).
 
+---
+
+## Benchmarks
+
+I am using [JMH](https://openjdk.java.net/projects/code-tools/jmh/) to run benchmarks.
+
+### SSTable
+
+- Negative access: the key is not present in the table, hence the Bloom filter will likely stop the search;
+- Random access: the key is present in the table, the order of the keys is random.
+
+```
+Benchmark                         Mode  Cnt        Score       Error  Units
+SSTableBenchmark.negativeAccess  thrpt   10  2449836.577 ± 44131.648  ops/s
+SSTableBenchmark.randomAccess    thrpt   10    33154.515 ±  1522.062  ops/s
+```
+
+---
+
 ## Implementation status
 
 - [x] SSTable
