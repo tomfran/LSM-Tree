@@ -1,6 +1,7 @@
 package com.tomfran.lsm.sstable;
 
 import com.tomfran.lsm.bloom.BloomFilter;
+import com.tomfran.lsm.io.BaseInputStream;
 import com.tomfran.lsm.io.BaseOutputStream;
 import com.tomfran.lsm.io.ItemsInputStream;
 import com.tomfran.lsm.io.ItemsOutputStream;
@@ -19,12 +20,12 @@ public class SSTable {
     public static final String BLOOM_FILE_EXTENSION = ".bloom";
     public static final String INDEX_FILE_EXTENSION = ".index";
 
-    private final ItemsInputStream is;
-    private int size;
+    ItemsInputStream is;
+    int size;
 
-    private LongArrayList sparseIndex;
-    private ObjectArrayList<byte[]> sparseKeys;
-    private BloomFilter bloomFilter;
+    LongArrayList sparseOffsets;
+    ObjectArrayList<byte[]> sparseKeys;
+    BloomFilter bloomFilter;
 
     /**
      * Create a new SSTable from an Iterable of Items.
@@ -39,6 +40,23 @@ public class SSTable {
         is = new ItemsInputStream(filename + DATA_FILE_EXTENSION);
     }
 
+    /**
+     * Initialize an SSTable from disk.
+     *
+     * @param filename The base filename of the SSTable.
+     */
+    public SSTable(String filename) {
+        initializeFromDisk(filename);
+    }
+
+    /**
+     * Merge multiple SSTables into a single SSTable.
+     *
+     * @param filename   The filename to write the SSTable to.
+     * @param sampleSize The number of items to skip between sparse index entries.
+     * @param tables     The SSTables to merge.
+     * @return The merged SSTable.
+     */
     static SSTable merge(String filename, int sampleSize, SSTable... tables) {
 
         int newSize = 0;
@@ -51,6 +69,35 @@ public class SSTable {
         SSTableMergerIterator it = new SSTableMergerIterator(iterators);
 
         return new SSTable(filename, it, sampleSize, newSize);
+    }
+
+    private void initializeFromDisk(String filename) {
+        // items file
+        is = new ItemsInputStream(filename + DATA_FILE_EXTENSION);
+
+        // sparse index
+        sparseOffsets = new LongArrayList();
+        sparseKeys = new ObjectArrayList<>();
+
+        BaseInputStream indexIs = new BaseInputStream(filename + INDEX_FILE_EXTENSION);
+        size = indexIs.readVByteInt();
+
+        int sparseSize = indexIs.readVByteInt();
+        long offsetsCumulative = 0;
+        sparseOffsets.add(offsetsCumulative);
+        for (int i = 0; i < sparseSize - 1; i++) {
+            offsetsCumulative += indexIs.readVByteLong();
+            sparseOffsets.add(offsetsCumulative);
+        }
+
+        for (int i = 0; i < sparseSize; i++)
+            sparseKeys.add(indexIs.readNBytes(indexIs.readVByteInt()));
+
+
+        is.close();
+
+        // bloom filter
+        bloomFilter = BloomFilter.readFromFile(filename + BLOOM_FILE_EXTENSION);
     }
 
     /**
@@ -92,7 +139,7 @@ public class SSTable {
 
     private long getCandidateOffset(byte[] key) {
         int low = 0;
-        int high = sparseIndex.size() - 1;
+        int high = sparseOffsets.size() - 1;
 
         while (low < (high - 1)) {
             int mid = (low + high) / 2;
@@ -103,15 +150,15 @@ public class SSTable {
             else if (cmp > 0)
                 low = mid;
             else
-                return sparseIndex.getLong(mid);
+                return sparseOffsets.getLong(mid);
         }
-        return sparseIndex.getLong(low);
+        return sparseOffsets.getLong(low);
     }
 
     private void writeItems(String filename, Iterable<Item> items, int sampleSize, int numItems) {
         ItemsOutputStream ios = new ItemsOutputStream(filename + DATA_FILE_EXTENSION);
 
-        sparseIndex = new LongArrayList();
+        sparseOffsets = new LongArrayList();
         sparseKeys = new ObjectArrayList<>();
         bloomFilter = new BloomFilter(numItems);
 
@@ -120,7 +167,7 @@ public class SSTable {
         long offset = 0L;
         for (Item item : items) {
             if (size % sampleSize == 0) {
-                sparseIndex.add(offset);
+                sparseOffsets.add(offset);
                 sparseKeys.add(item.key());
             }
             bloomFilter.add(item.key());
@@ -136,12 +183,14 @@ public class SSTable {
         bloomFilter.writeToFile(filename + BLOOM_FILE_EXTENSION);
 
         BaseOutputStream indexOs = new BaseOutputStream(filename + INDEX_FILE_EXTENSION);
-        indexOs.writeLong(sparseIndex.size());
+        indexOs.writeVByteInt(size);
+        indexOs.writeVByteInt(sparseOffsets.size());
 
+        // skip first offset, always 0
         long prev = 0L;
-        for (long off : sparseIndex) {
-            indexOs.writeVByteLong(off - prev);
-            prev = off;
+        for (int i = 1; i < sparseOffsets.size(); i++) {
+            indexOs.writeVByteLong(sparseOffsets.getLong(i) - prev);
+            prev = sparseOffsets.getLong(i);
         }
 
         for (byte[] key : sparseKeys) {

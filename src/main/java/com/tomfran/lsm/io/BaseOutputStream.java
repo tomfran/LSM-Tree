@@ -44,8 +44,9 @@ public class BaseOutputStream {
     }
 
     private byte[] longToVByte(long n) {
-        if (n == 0)
-            return new byte[]{0};
+        if (n <= 0) {
+            throw new IllegalArgumentException("n must be greater than 0");
+        }
 
         int i = 0;
         while (n > 0) {

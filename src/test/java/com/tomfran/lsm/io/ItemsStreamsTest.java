@@ -5,8 +5,9 @@ import it.unimi.dsi.fastutil.objects.ObjectArrayList;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
 
-import java.io.File;
+import java.nio.file.Path;
 import java.util.stream.IntStream;
 
 import static com.tomfran.lsm.TestUtils.assertItemEquals;
@@ -14,8 +15,9 @@ import static com.tomfran.lsm.TestUtils.getRandomItem;
 
 class ItemsStreamsTest {
 
-    static final String FILENAME = "io-test.sst";
-
+    static final String FILENAME = "/items.data";
+    @TempDir
+    static Path tempDirectory;
     static ItemsInputStream in;
     static ItemsOutputStream out;
 
@@ -23,7 +25,7 @@ class ItemsStreamsTest {
 
     @BeforeAll
     public static void setup() {
-        out = new ItemsOutputStream(FILENAME);
+        out = new ItemsOutputStream(tempDirectory + "/items.data");
 
         items = new ObjectArrayList<>();
 
@@ -36,15 +38,13 @@ class ItemsStreamsTest {
 
         out.close();
 
-        in = new ItemsInputStream(FILENAME);
+        in = new ItemsInputStream(tempDirectory + FILENAME);
     }
 
     @AfterAll
     public static void teardown() {
         in.close();
         out.close();
-
-        new File(FILENAME).delete();
     }
 
     @Test

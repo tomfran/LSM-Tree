@@ -1,27 +1,25 @@
 package com.tomfran.lsm.bloom;
 
-import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
 
-import static com.tomfran.lsm.TestUtils.deleteFile;
+import java.nio.file.Path;
+
 import static com.tomfran.lsm.TestUtils.getRandomByteArrayList;
 
 public class BloomFilterFileTest {
 
-    static final String FILENAME = "bloom.test";
-
-    @AfterAll
-    static void tearDown() {
-        deleteFile(FILENAME);
-    }
+    static final String FILENAME = "/filter.bloom";
+    @TempDir
+    static Path tempDirectory;
 
     @Test
     public void shouldReconstruct() {
         BloomFilter bf = new BloomFilter(10000, 0.01);
         getRandomByteArrayList(10000).forEach(bf::add);
-        bf.writeToFile(FILENAME);
+        bf.writeToFile(tempDirectory + FILENAME);
 
-        BloomFilter bf2 = BloomFilter.readFromFile(FILENAME);
+        BloomFilter bf2 = BloomFilter.readFromFile(tempDirectory + FILENAME);
 
         assert bf2.size == bf.size;
         assert bf2.hashCount == bf.hashCount;

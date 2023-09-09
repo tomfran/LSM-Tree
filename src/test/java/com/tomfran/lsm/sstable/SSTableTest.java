@@ -6,17 +6,19 @@ import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
 
+import java.nio.file.Path;
 import java.util.List;
 
-import static com.tomfran.lsm.TestUtils.deleteSSTableFiles;
 import static com.tomfran.lsm.TestUtils.getRandomItem;
 import static com.tomfran.lsm.comparator.ByteArrayComparator.compare;
 
 class SSTableTest {
 
-    static final String TEST_FILE = "test";
-
+    static final String TEST_FILE = "/sstable";
+    @TempDir
+    static Path tempDirectory;
     static SSTable t;
     static List<Item> items;
 
@@ -32,13 +34,12 @@ class SSTableTest {
                 .sorted((a, b) -> ByteArrayComparator.compare(a.key(), b.key()))
                 .toList();
 
-        t = new SSTable(TEST_FILE, items, 100, items.size());
+        t = new SSTable(tempDirectory + TEST_FILE, items, 100, items.size());
     }
 
     @AfterAll
     public static void teardown() {
         t.close();
-        deleteSSTableFiles(TEST_FILE);
     }
 
     @Test

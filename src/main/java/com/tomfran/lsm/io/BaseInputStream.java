@@ -18,17 +18,21 @@ public class BaseInputStream {
         }
     }
 
-    public int readVByteInt() throws IOException {
-        int result = 0;
-        byte[] b;
+    public int readVByteInt() {
+        return (int) readVByteLong();
+    }
+
+    public long readVByteLong() {
+        long result = 0;
+        int b;
         int shift = 0;
         while (true) {
-            b = fis.readNBytes(1);
-            result |= (((int) b[0] & 0x7F) << shift);
+            b = readByteInt();
+            result |= (((long) b & 0x7F) << shift);
 
-            if ((b[0] & 0x80) == 0x80) {
+            if ((b & 0x80) == 0x80)
                 break;
-            }
+
             shift += 7;
         }
         return result;
@@ -47,9 +51,9 @@ public class BaseInputStream {
         }
     }
 
-    public byte readByte() {
+    public int readByteInt() {
         try {
-            return (byte) fis.read();
+            return fis.read();
         } catch (IOException e) {
             throw new RuntimeException(e);
         }

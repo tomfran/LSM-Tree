@@ -1,11 +1,12 @@
 package com.tomfran.lsm.sstable;
 
-import com.tomfran.lsm.TestUtils;
 import com.tomfran.lsm.types.Item;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
 
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -13,11 +14,9 @@ import static com.tomfran.lsm.TestUtils.assertItemEquals;
 
 public class SSTableMergeTest {
 
-    static final String
-            MERGE_FILE = "merge.sst",
-            TABLE_1_FILE = "test1.sst",
-            TABLE_2_FILE = "test2.sst";
-
+    static final String MERGE_FILE = "/merge", TABLE_1_FILE = "/test1", TABLE_2_FILE = "/test2";
+    @TempDir
+    static Path tempDirectory;
     static SSTable merge, first, second;
     static List<Item> firstItems, secondItems, expectedItems;
 
@@ -37,10 +36,10 @@ public class SSTableMergeTest {
         expectedItems.addAll(firstItems);
         secondItems.stream().skip(n / 2).forEach(expectedItems::add);
 
-        first = new SSTable(TABLE_1_FILE, firstItems, 100, firstItems.size());
-        second = new SSTable(TABLE_2_FILE, secondItems, 100, secondItems.size());
+        first = new SSTable(tempDirectory + TABLE_1_FILE, firstItems, 100, firstItems.size());
+        second = new SSTable(tempDirectory + TABLE_2_FILE, secondItems, 100, secondItems.size());
 
-        merge = SSTable.merge(MERGE_FILE, 100, first, second);
+        merge = SSTable.merge(tempDirectory + MERGE_FILE, 100, first, second);
     }
 
     @AfterAll
@@ -48,7 +47,6 @@ public class SSTableMergeTest {
         merge.close();
         first.close();
         second.close();
-        List.of(MERGE_FILE, TABLE_1_FILE, TABLE_2_FILE).forEach(TestUtils::deleteSSTableFiles);
     }
 
     private static List<Item> generateItems(int start, int end, boolean incr) {
