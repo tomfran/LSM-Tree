@@ -60,7 +60,8 @@ and offsets in the index are stored as [deltas](https://en.wikipedia.org/wiki/De
 
 ## Benchmarks
 
-I am using [JMH](https://openjdk.java.net/projects/code-tools/jmh/) to run benchmarks.
+I am using [JMH](https://openjdk.java.net/projects/code-tools/jmh/) to run benchmarks,
+the results are obtained on a MacBook Pro (16-inch, 2021) with an M1 Pro processor and 16 GB of RAM.
 
 ### SSTable
 
@@ -69,8 +70,8 @@ I am using [JMH](https://openjdk.java.net/projects/code-tools/jmh/) to run bench
 
 ```
 Benchmark                         Mode  Cnt        Score       Error  Units
-SSTableBenchmark.negativeAccess  thrpt   10  2449836.577 ± 44131.648  ops/s
-SSTableBenchmark.randomAccess    thrpt   10    33154.515 ±  1522.062  ops/s
+SSTableBenchmark.negativeAccess  thrpt   10  3681095.460 ± 38052.449  ops/s
+SSTableBenchmark.randomAccess    thrpt   10    57254.444 ±   401.035  ops/s
 ```
 
 ---
