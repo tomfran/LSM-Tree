@@ -237,7 +237,7 @@ public class SSTable {
 
         @SafeVarargs
         public SSTableMergerIterator(Iterator<Item>... iterators) {
-            super((a, b) -> compare(a.key(), b.key()), iterators);
+            super(iterators);
             last = super.next();
         }
 
@@ -249,7 +249,7 @@ public class SSTable {
         @Override
         public Item next() {
             next = super.next();
-            while (next != null && compare(last.key(), next.key()) == 0)
+            while (next != null && last.compareTo(next) == 0)
                 next = super.next();
 
             Item toReturn = last;

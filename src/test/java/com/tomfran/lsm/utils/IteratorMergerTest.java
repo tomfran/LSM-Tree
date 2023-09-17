@@ -20,7 +20,6 @@ class IteratorMergerTest {
         Collections.shuffle(iteratorList);
 
         IteratorMerger<Integer> merger = new IteratorMerger<>(
-                Integer::compareTo,
                 iteratorList.<Iterator<Integer>>toArray(Iterator[]::new)
         );
 
