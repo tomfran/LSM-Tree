@@ -106,7 +106,7 @@ public class SSTable {
      * @param key The key of the item to read.
      * @return The item with the given key, or null if no such item exists.
      */
-    public Item getItem(byte[] key) {
+    public Item get(byte[] key) {
         if (!bloomFilter.mightContain(key))
             return null;
 

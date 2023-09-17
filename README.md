@@ -86,5 +86,14 @@ SSTableBenchmark.randomAccess    thrpt   10    57254.444 ±   401.035  ops/s
     - [x] Bloom filter
     - [x] Indexes persistence
     - [x] File initialization
-- [ ] Memtable
+- [ ] Skip-List
+    - [x] Operations
+    - [ ] Iterator
 - [ ] Tree
+    - [ ] Operations
+    - [ ] Background compaction
+- [ ] Benchmarks
+    - [x] SSTable
+    - [x] Bloom filter
+    - [x] Skip-List
+    - [ ] Tree

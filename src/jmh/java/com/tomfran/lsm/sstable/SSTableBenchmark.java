@@ -90,7 +90,7 @@ public class SSTableBenchmark {
     @Benchmark
     public void randomAccess(Blackhole bh) {
         var item = insertedArray[index];
-        var it = sstable.getItem(item.key());
+        var it = sstable.get(item.key());
 
         bh.consume(it);
 
@@ -100,7 +100,7 @@ public class SSTableBenchmark {
     @Benchmark
     public void negativeAccess(Blackhole bh) {
         var item = skippedArray[index];
-        var it = sstable.getItem(item.key());
+        var it = sstable.get(item.key());
 
         bh.consume(it);
 

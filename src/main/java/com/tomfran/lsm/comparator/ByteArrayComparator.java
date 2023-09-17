@@ -3,6 +3,10 @@ package com.tomfran.lsm.comparator;
 public class ByteArrayComparator {
 
     static public int compare(byte[] a, byte[] b) {
+
+        if (a == null)
+            return b == null ? 0 : -1;
+
         int aLen = a.length;
         int bLen = b.length;
 

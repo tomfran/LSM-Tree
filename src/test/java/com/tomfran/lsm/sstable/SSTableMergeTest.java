@@ -60,7 +60,7 @@ public class SSTableMergeTest {
     @Test
     public void shouldGetItems() {
         for (var item : expectedItems) {
-            var it = merge.getItem(item.key());
+            var it = merge.get(item.key());
             assert it != null;
             assertItemEquals(item, it);
         }

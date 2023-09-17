@@ -20,7 +20,13 @@ public class TestUtils {
         );
     }
 
-    static byte[] getRandomByteArray() {
+    public static byte[] getRandomByteArray(int length) {
+        byte[] bytes = new byte[length];
+        rn.nextBytes(bytes);
+        return bytes;
+    }
+
+    public static byte[] getRandomByteArray() {
         byte[] bytes = new byte[rn.nextInt(MIN_BYTES_LENGTH, MAX_BYTES_LENGTH)];
         rn.nextBytes(bytes);
         return bytes;

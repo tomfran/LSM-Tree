@@ -62,7 +62,7 @@ class SSTableTest {
     @Test
     public void shouldFindItems() {
         for (var item : inserted) {
-            var it = t.getItem(item.key());
+            var it = t.get(item.key());
             assert it != null;
             assert compare(item.key(), it.key()) == 0;
             assert compare(item.value(), it.value()) == 0;
@@ -72,7 +72,7 @@ class SSTableTest {
     @Test
     public void shouldNotFind() {
         for (var item : skipped)
-            assert t.getItem(item.key()) == null;
+            assert t.get(item.key()) == null;
     }
 
     @Test

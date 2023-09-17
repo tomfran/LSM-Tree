@@ -12,6 +12,7 @@ repositories {
 
 dependencies {
     implementation 'it.unimi.dsi:fastutil:8.5.12'
+    implementation 'it.unimi.dsi:dsiutils:2.7.3'
     implementation 'commons-codec:commons-codec:1.16.0'
 
     testImplementation(platform("org.junit:junit-bom:5.9.1"))
