@@ -2,6 +2,15 @@
 
 An implementation of the Log-Structured Merge Tree (LSM tree) data structure in Java.
 
+**Table of Contents**
+
+1. [Sorted String Table](#SSTable)
+2. [Skip-List](#Skip-List)
+3. [Benchmarks](#Benchmarks)
+4. [Implementation status](#Implementation-status)
+
+---
+
 ## SSTable
 
 Sorted String Table (SSTable) is a collection of files modelling key-value pairs in sorted order by key.
@@ -58,6 +67,34 @@ and offsets in the index are stored as [deltas](https://en.wikipedia.org/wiki/De
 
 ---
 
+## Skip-List
+
+A [skip-list](https://en.wikipedia.org/wiki/Skip_list) is a probabilistic data structure that allows fast search,
+insertion and deletion of elements in a sorted sequence.
+
+In the LSM tree, it is used as an in-memory data structure to store key-value pairs in sorted order by key.
+Once the skip-list reaches a certain size, it is flushed to disk as an SSTable.
+
+### Operations details
+
+The idea of a skip list is similar to a classic linked list. We have nodes with forward pointers, but also levels. We
+can think about a
+level as a fast lane between nodes. By carefully constructing them at insertion time, searches are faster, as they can
+use higher levels to skip unwanted nodes.
+
+Given `n` elements, a skip list has `log(n)` levels, the first level containing all the elements.
+By increasing the level, the number of elements is cut roughly by half.
+
+![readme_imgs/skip-list.png](readme_imgs/skip-list.png)
+
+To locate an element, we start from the top level and move forward until we find an element greater than the one
+we are looking for. Then we move down to the next level and repeat the process until we find the element.
+
+Insertions, deletions, and updates are done by first locating the element, then performing
+the operation on the node. All of them have a time complexity of `O(log(n))`.
+
+---
+
 ## Benchmarks
 
 I am using [JMH](https://openjdk.java.net/projects/code-tools/jmh/) to run benchmarks,
@@ -69,9 +106,31 @@ the results are obtained on a MacBook Pro (16-inch, 2021) with an M1 Pro process
 - Random access: the key is present in the table, the order of the keys is random.
 
 ```
-Benchmark                         Mode  Cnt        Score       Error  Units
-SSTableBenchmark.negativeAccess  thrpt   10  3681095.460 ± 38052.449  ops/s
-SSTableBenchmark.randomAccess    thrpt   10    57254.444 ±   401.035  ops/s
+Benchmark                                       Mode  Cnt         Score        Error  Units
+c.t.l.sstable.SSTableBenchmark.negativeAccess  thrpt   10   3541989.316 ±  78933.780  ops/s
+c.t.l.sstable.SSTableBenchmark.randomAccess    thrpt   10     56157.613 ±    264.314  ops/s
+```
+
+### Bloom filter
+
+- Add: add keys to a 1M keys Bloom filter with 0.01 false positive rate;
+- Contains: test whether the keys are present in the Bloom filter.
+
+```
+Benchmark                                       Mode  Cnt         Score        Error  Units
+c.t.l.bloom.BloomFilterBenchmark.add           thrpt   10   9777191.526 ± 168208.916  ops/s
+c.t.l.bloom.BloomFilterBenchmark.contains      thrpt   10  10724196.205 ±  20411.741  ops/s
+```
+
+### Skip-List
+
+- Get: get keys from a 100k keys skip-list;
+- Add/Remove: add and remove keys from a 100k keys skip-list.
+
+```
+Benchmark                                       Mode  Cnt         Score        Error  Units
+c.t.l.memtable.SkipListBenchmark.addRemove     thrpt   10    684885.546 ±  21793.787  ops/s
+c.t.l.memtable.SkipListBenchmark.get           thrpt   10    823423.128 ±  83028.354  ops/s
 ```
 
 ---
