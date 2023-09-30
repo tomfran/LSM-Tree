@@ -85,7 +85,7 @@ use higher levels to skip unwanted nodes.
 Given `n` elements, a skip list has `log(n)` levels, the first level containing all the elements.
 By increasing the level, the number of elements is cut roughly by half.
 
-![readme_imgs/skip-list.png](readme_imgs/skip-list.png)
+![readme_imgs/skip-list.png](misc/skip-list.png)
 
 To locate an element, we start from the top level and move forward until we find an element greater than the one
 we are looking for. Then we move down to the next level and repeat the process until we find the element.
