@@ -9,19 +9,33 @@ import static com.tomfran.lsm.comparator.ByteArrayComparator.compare;
 import static java.lang.Math.ceil;
 import static java.lang.Math.log;
 
+/**
+ * A skip list implementation of items.
+ */
 public class SkipList implements Iterable<Item> {
 
     static final int DEFAULT_ELEMENTS = 1 << 16;
+
     final Node sentinel;
+
     private final Node[] buffer;
     private final XoRoShiRo128PlusRandom rn;
+
     int levels;
     int size;
 
+    /**
+     * Create a skip list with a default number of elements, 2 ^ 16.
+     */
     public SkipList() {
         this(DEFAULT_ELEMENTS);
     }
 
+    /**
+     * Create a skip list with a specified number of elements.
+     *
+     * @param numElements The number of elements to size the skip list for.
+     */
     public SkipList(int numElements) {
         levels = (int) ceil(log(numElements) / log(2));
         size = 0;
@@ -30,6 +44,11 @@ public class SkipList implements Iterable<Item> {
         buffer = new Node[levels];
     }
 
+    /**
+     * Add an item to the skip list.
+     *
+     * @param item The item to add.
+     */
     public void add(Item item) {
         Node current = sentinel;
         for (int i = levels - 1; i >= 0; i--) {
@@ -58,6 +77,12 @@ public class SkipList implements Iterable<Item> {
         return level;
     }
 
+    /**
+     * Retrieve an item from the skip list.
+     *
+     * @param key The key of the item to retrieve.
+     * @return The item if found, null otherwise.
+     */
     public Item get(byte[] key) {
         Node current = sentinel;
         for (int i = levels - 1; i >= 0; i--) {
@@ -71,6 +96,11 @@ public class SkipList implements Iterable<Item> {
         return null;
     }
 
+    /**
+     * Remove an item from the skip list.
+     *
+     * @param key The key of the item to remove.
+     */
     public void remove(byte[] key) {
         Node current = sentinel;
         for (int i = levels - 1; i >= 0; i--) {
@@ -90,13 +120,23 @@ public class SkipList implements Iterable<Item> {
         }
     }
 
+    /**
+     * Get the number of items in the skip list.
+     *
+     * @return Skip list size.
+     */
     public int size() {
         return size;
     }
 
+    /**
+     * Get an iterator over the items in the skip list at the lowest level.
+     *
+     * @return An iterator over the items in the skip list.
+     */
     @Override
     public Iterator<Item> iterator() {
-        return null;
+        return new SkipListIterator(sentinel);
     }
 
     @Override
@@ -114,13 +154,26 @@ public class SkipList implements Iterable<Item> {
         return sb.toString();
     }
 
-    static final class Node {
+    private static final class Node {
         Item value;
         Node[] next;
 
         Node(Item value, int numLevels) {
             this.value = value;
             this.next = new Node[numLevels];
+        }
+    }
+
+    private record SkipListIterator(Node node) implements Iterator<Item> {
+
+        @Override
+        public boolean hasNext() {
+            return node.next[0] != null;
+        }
+
+        @Override
+        public Item next() {
+            return node.next[0].value;
         }
     }
 

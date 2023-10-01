@@ -3,42 +3,36 @@ package com.tomfran.lsm.memtable;
 import com.tomfran.lsm.sstable.SSTable;
 import com.tomfran.lsm.types.Item;
 
-import java.util.LinkedList;
-
 public class Memtable {
 
-    SkipList mutableData;
-    LinkedList<SkipList> immutableData;
-    LinkedList<LinkedList<SSTable>> sstables;
+    static final int DEFAULT_SAMPLE_SIZE = 1000;
+
+    SkipList list;
+
 
     public Memtable() {
-        mutableData = new SkipList();
-        immutableData = new LinkedList<>();
+        list = new SkipList();
     }
 
     public void add(Item item) {
-        mutableData.add(item);
+        list.add(item);
     }
 
     public void get(byte[] key) {
-        mutableData.get(key);
+        list.get(key);
     }
 
     public void remove(byte[] key) {
-        mutableData.remove(key);
+        list.add(new Item(key, null));
     }
 
     public int size() {
-        return mutableData.size();
-    }
-
-    private void replaceMutableData() {
-        immutableData.addFirst(mutableData);
-        mutableData = new SkipList();
+        return list.size();
     }
 
     public SSTable flush() {
-        return null;
+        String filename = "sstable-" + System.currentTimeMillis();
+        return new SSTable(filename, list, DEFAULT_SAMPLE_SIZE, list.size());
     }
 
 }

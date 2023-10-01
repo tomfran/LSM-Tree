@@ -20,6 +20,7 @@ public class SSTable {
     public static final String BLOOM_FILE_EXTENSION = ".bloom";
     public static final String INDEX_FILE_EXTENSION = ".index";
 
+    String filename;
     ItemsInputStream is;
     int size;
 
@@ -36,6 +37,7 @@ public class SSTable {
      * @param numItems   The number of items in the SSTable.
      */
     public SSTable(String filename, Iterable<Item> items, int sampleSize, int numItems) {
+        this.filename = filename;
         writeItems(filename, items, sampleSize, numItems);
         is = new ItemsInputStream(filename + DATA_FILE_EXTENSION);
     }
@@ -46,6 +48,7 @@ public class SSTable {
      * @param filename The base filename of the SSTable.
      */
     public SSTable(String filename) {
+        this.filename = filename;
         initializeFromDisk(filename);
     }
 
@@ -205,13 +208,7 @@ public class SSTable {
         indexOs.close();
     }
 
-    private static class SSTableIterator implements Iterator<Item> {
-
-        private final SSTable table;
-
-        public SSTableIterator(SSTable table) {
-            this.table = table;
-        }
+    private record SSTableIterator(SSTable table) implements Iterator<Item> {
 
         @Override
         public boolean hasNext() {
@@ -233,7 +230,7 @@ public class SSTable {
      */
     private static class SSTableMergerIterator extends IteratorMerger<Item> implements Iterable<Item> {
 
-        private Item last, next;
+        private Item last;
 
         @SafeVarargs
         public SSTableMergerIterator(Iterator<Item>... iterators) {
@@ -248,7 +245,7 @@ public class SSTable {
 
         @Override
         public Item next() {
-            next = super.next();
+            Item next = super.next();
             while (next != null && last.compareTo(next) == 0)
                 next = super.next();
 

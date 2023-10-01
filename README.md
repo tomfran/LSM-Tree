@@ -91,7 +91,7 @@ To locate an element, we start from the top level and move forward until we find
 we are looking for. Then we move down to the next level and repeat the process until we find the element.
 
 Insertions, deletions, and updates are done by first locating the element, then performing
-the operation on the node. All of them have a time complexity of `O(log(n))`.
+the operation on the node. All of them have an average time complexity of `O(log(n))`.
 
 ---
 
@@ -147,7 +147,7 @@ c.t.l.memtable.SkipListBenchmark.get           thrpt   10    823423.128 ±  8302
     - [x] File initialization
 - [ ] Skip-List
     - [x] Operations
-    - [ ] Iterator
+    - [x] Iterator
 - [ ] Tree
     - [ ] Operations
     - [ ] Background compaction
