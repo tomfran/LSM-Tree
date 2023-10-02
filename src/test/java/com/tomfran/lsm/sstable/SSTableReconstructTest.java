@@ -1,6 +1,6 @@
 package com.tomfran.lsm.sstable;
 
-import com.tomfran.lsm.types.Item;
+import com.tomfran.lsm.types.ByteArrayPair;
 import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -11,7 +11,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
 
-import static com.tomfran.lsm.TestUtils.getRandomItem;
+import static com.tomfran.lsm.TestUtils.getRandomPair;
 import static com.tomfran.lsm.comparator.ByteArrayComparator.compare;
 import static com.tomfran.lsm.sstable.SSTable.*;
 
@@ -25,9 +25,9 @@ public class SSTableReconstructTest {
     @BeforeAll
     static void setup() throws IOException {
 
-        var l = new ObjectOpenHashSet<Item>();
+        var l = new ObjectOpenHashSet<ByteArrayPair>();
         for (int i = 0; i < 10; i++) {
-            l.add(getRandomItem());
+            l.add(getRandomPair());
         }
 
         var items = l.stream()

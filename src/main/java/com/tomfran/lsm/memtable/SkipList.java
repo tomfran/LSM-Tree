@@ -1,6 +1,6 @@
 package com.tomfran.lsm.memtable;
 
-import com.tomfran.lsm.types.Item;
+import com.tomfran.lsm.types.ByteArrayPair;
 import it.unimi.dsi.util.XoRoShiRo128PlusRandom;
 
 import java.util.Iterator;
@@ -12,7 +12,7 @@ import static java.lang.Math.log;
 /**
  * A skip list implementation of items.
  */
-public class SkipList implements Iterable<Item> {
+public class SkipList implements Iterable<ByteArrayPair> {
 
     static final int DEFAULT_ELEMENTS = 1 << 16;
 
@@ -49,7 +49,7 @@ public class SkipList implements Iterable<Item> {
      *
      * @param item The item to add.
      */
-    public void add(Item item) {
+    public void add(ByteArrayPair item) {
         Node current = sentinel;
         for (int i = levels - 1; i >= 0; i--) {
             while (current.next[i] != null && current.next[i].value.compareTo(item) < 0)
@@ -83,7 +83,7 @@ public class SkipList implements Iterable<Item> {
      * @param key The key of the item to retrieve.
      * @return The item if found, null otherwise.
      */
-    public Item get(byte[] key) {
+    public ByteArrayPair get(byte[] key) {
         Node current = sentinel;
         for (int i = levels - 1; i >= 0; i--) {
             while (current.next[i] != null && compare(current.next[i].value.key(), key) < 0)
@@ -135,7 +135,7 @@ public class SkipList implements Iterable<Item> {
      * @return An iterator over the items in the skip list.
      */
     @Override
-    public Iterator<Item> iterator() {
+    public Iterator<ByteArrayPair> iterator() {
         return new SkipListIterator(sentinel);
     }
 
@@ -155,16 +155,16 @@ public class SkipList implements Iterable<Item> {
     }
 
     private static final class Node {
-        Item value;
+        ByteArrayPair value;
         Node[] next;
 
-        Node(Item value, int numLevels) {
+        Node(ByteArrayPair value, int numLevels) {
             this.value = value;
             this.next = new Node[numLevels];
         }
     }
 
-    private record SkipListIterator(Node node) implements Iterator<Item> {
+    private record SkipListIterator(Node node) implements Iterator<ByteArrayPair> {
 
         @Override
         public boolean hasNext() {
@@ -172,7 +172,7 @@ public class SkipList implements Iterable<Item> {
         }
 
         @Override
-        public Item next() {
+        public ByteArrayPair next() {
             return node.next[0].value;
         }
     }

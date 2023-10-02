@@ -1,20 +1,20 @@
 package com.tomfran.lsm.memtable;
 
-import com.tomfran.lsm.types.Item;
+import com.tomfran.lsm.types.ByteArrayPair;
 import it.unimi.dsi.fastutil.objects.ObjectArrayList;
 import org.openjdk.jmh.annotations.*;
 import org.openjdk.jmh.infra.Blackhole;
 
 import java.util.concurrent.TimeUnit;
 
-import static com.tomfran.lsm.TestUtils.getRandomItem;
+import static com.tomfran.lsm.TestUtils.getRandomPair;
 
 @OutputTimeUnit(TimeUnit.SECONDS)
 @State(Scope.Benchmark)
 public class SkipListBenchmark {
 
     SkipList l;
-    Item[] items;
+    ByteArrayPair[] items;
 
     int NUM_ITEMS = 200000;
     int index = 0;
@@ -27,16 +27,16 @@ public class SkipListBenchmark {
         l = new SkipList(NUM_ITEMS / 2);
 
         // generate random items and insert half
-        ObjectArrayList<Item> tmp = new ObjectArrayList<>();
+        ObjectArrayList<ByteArrayPair> tmp = new ObjectArrayList<>();
         for (int i = 0; i < NUM_ITEMS; i++) {
-            var it = getRandomItem();
+            var it = getRandomPair();
             if (i < NUM_ITEMS / 2)
                 l.add(it);
 
             tmp.add(it);
         }
 
-        items = tmp.toArray(new Item[0]);
+        items = tmp.toArray(new ByteArrayPair[0]);
 
         // generate sequence of add/remove operations
         addRemove = new boolean[NUM_ITEMS];

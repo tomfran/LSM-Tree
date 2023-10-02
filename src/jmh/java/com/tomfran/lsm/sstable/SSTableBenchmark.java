@@ -1,7 +1,7 @@
 package com.tomfran.lsm.sstable;
 
 import com.tomfran.lsm.comparator.ByteArrayComparator;
-import com.tomfran.lsm.types.Item;
+import com.tomfran.lsm.types.ByteArrayPair;
 import it.unimi.dsi.fastutil.objects.ObjectArrayList;
 import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet;
 import org.openjdk.jmh.annotations.*;
@@ -13,7 +13,7 @@ import java.nio.file.Path;
 import java.util.Collections;
 import java.util.concurrent.TimeUnit;
 
-import static com.tomfran.lsm.TestUtils.getRandomItem;
+import static com.tomfran.lsm.TestUtils.getRandomPair;
 
 @OutputTimeUnit(TimeUnit.SECONDS)
 @State(Scope.Benchmark)
@@ -23,8 +23,8 @@ public class SSTableBenchmark {
     static final int NUM_ITEMS = 100000;
     static final int SAMPLE_SIZE = NUM_ITEMS / 1000;
 
-    static Item[] insertedArray;
-    static Item[] skippedArray;
+    static ByteArrayPair[] insertedArray;
+    static ByteArrayPair[] skippedArray;
     static SSTable sstable;
 
     static int index = 0;
@@ -38,9 +38,9 @@ public class SSTableBenchmark {
         Files.createDirectory(DIR);
 
         // generate random items
-        var l = new ObjectOpenHashSet<Item>();
+        var l = new ObjectOpenHashSet<ByteArrayPair>();
         for (int i = 0; i < NUM_ITEMS * 2; i++) {
-            l.add(getRandomItem());
+            l.add(getRandomPair());
         }
 
         // sort and divide into inserted and skipped
@@ -48,8 +48,8 @@ public class SSTableBenchmark {
                 .sorted((a, b) -> ByteArrayComparator.compare(a.key(), b.key()))
                 .toList();
 
-        var inserted = new ObjectArrayList<Item>();
-        var skipped = new ObjectArrayList<Item>();
+        var inserted = new ObjectArrayList<ByteArrayPair>();
+        var skipped = new ObjectArrayList<ByteArrayPair>();
 
         for (int i = 0; i < items.size(); i++) {
             var e = items.get(i);
@@ -64,8 +64,8 @@ public class SSTableBenchmark {
         // shuffle to avoid sequential access
         Collections.shuffle(inserted);
         Collections.shuffle(skipped);
-        insertedArray = inserted.toArray(Item[]::new);
-        skippedArray = skipped.toArray(Item[]::new);
+        insertedArray = inserted.toArray(ByteArrayPair[]::new);
+        skippedArray = skipped.toArray(ByteArrayPair[]::new);
     }
 
     @TearDown

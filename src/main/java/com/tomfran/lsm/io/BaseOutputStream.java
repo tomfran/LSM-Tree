@@ -1,5 +1,6 @@
 package com.tomfran.lsm.io;
 
+import com.tomfran.lsm.types.ByteArrayPair;
 import it.unimi.dsi.fastutil.io.FastBufferedOutputStream;
 
 import java.io.FileOutputStream;
@@ -37,6 +38,20 @@ public class BaseOutputStream {
 
     public int writeLong(long n) {
         return write(longToBytes(n));
+    }
+
+    public int writeBytePair(ByteArrayPair pair) {
+        byte[] key = pair.key(), value = pair.value();
+        byte[] keyBytes = intToVByte(key.length), valueBytes = intToVByte(value.length);
+
+        byte[] result = new byte[keyBytes.length + valueBytes.length + key.length + value.length];
+
+        System.arraycopy(keyBytes, 0, result, 0, keyBytes.length);
+        System.arraycopy(valueBytes, 0, result, keyBytes.length, valueBytes.length);
+
+        System.arraycopy(key, 0, result, keyBytes.length + valueBytes.length, key.length);
+        System.arraycopy(value, 0, result, keyBytes.length + valueBytes.length + key.length, value.length);
+        return write(result);
     }
 
     byte[] intToVByte(int n) {

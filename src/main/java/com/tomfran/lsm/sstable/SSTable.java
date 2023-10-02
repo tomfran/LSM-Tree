@@ -3,10 +3,9 @@ package com.tomfran.lsm.sstable;
 import com.tomfran.lsm.bloom.BloomFilter;
 import com.tomfran.lsm.io.BaseInputStream;
 import com.tomfran.lsm.io.BaseOutputStream;
-import com.tomfran.lsm.io.ItemsInputStream;
-import com.tomfran.lsm.io.ItemsOutputStream;
-import com.tomfran.lsm.types.Item;
+import com.tomfran.lsm.types.ByteArrayPair;
 import com.tomfran.lsm.utils.IteratorMerger;
+import it.unimi.dsi.fastutil.ints.IntArrayList;
 import it.unimi.dsi.fastutil.longs.LongArrayList;
 import it.unimi.dsi.fastutil.objects.ObjectArrayList;
 
@@ -21,10 +20,11 @@ public class SSTable {
     public static final String INDEX_FILE_EXTENSION = ".index";
 
     String filename;
-    ItemsInputStream is;
+    BaseInputStream is;
     int size;
 
     LongArrayList sparseOffsets;
+    IntArrayList sparseSizeCount;
     ObjectArrayList<byte[]> sparseKeys;
     BloomFilter bloomFilter;
 
@@ -36,10 +36,10 @@ public class SSTable {
      * @param sampleSize The number of items to skip between sparse index entries.
      * @param numItems   The number of items in the SSTable.
      */
-    public SSTable(String filename, Iterable<Item> items, int sampleSize, int numItems) {
+    public SSTable(String filename, Iterable<ByteArrayPair> items, int sampleSize, int numItems) {
         this.filename = filename;
         writeItems(filename, items, sampleSize, numItems);
-        is = new ItemsInputStream(filename + DATA_FILE_EXTENSION);
+        is = new BaseInputStream(filename + DATA_FILE_EXTENSION);
     }
 
     /**
@@ -63,7 +63,7 @@ public class SSTable {
     static SSTable merge(String filename, int sampleSize, SSTable... tables) {
 
         int newSize = 0;
-        Iterator<Item>[] iterators = new Iterator[tables.length];
+        Iterator<ByteArrayPair>[] iterators = new Iterator[tables.length];
         for (int i = 0; i < tables.length; i++) {
             iterators[i] = tables[i].iterator();
             newSize += tables[i].size;
@@ -76,10 +76,11 @@ public class SSTable {
 
     private void initializeFromDisk(String filename) {
         // items file
-        is = new ItemsInputStream(filename + DATA_FILE_EXTENSION);
+        is = new BaseInputStream(filename + DATA_FILE_EXTENSION);
 
         // sparse index
         sparseOffsets = new LongArrayList();
+        sparseSizeCount = new IntArrayList();
         sparseKeys = new ObjectArrayList<>();
 
         BaseInputStream indexIs = new BaseInputStream(filename + INDEX_FILE_EXTENSION);
@@ -93,9 +94,15 @@ public class SSTable {
             sparseOffsets.add(offsetsCumulative);
         }
 
+        int sizeCumulative = 0;
+        sparseSizeCount.add(sizeCumulative);
+        for (int i = 0; i < sparseSize; i++) {
+            sizeCumulative += indexIs.readVByteInt();
+            sparseSizeCount.add(sizeCumulative);
+        }
+
         for (int i = 0; i < sparseSize; i++)
             sparseKeys.add(indexIs.readNBytes(indexIs.readVByteInt()));
-
 
         is.close();
 
@@ -109,22 +116,50 @@ public class SSTable {
      * @param key The key of the item to read.
      * @return The item with the given key, or null if no such item exists.
      */
-    public Item get(byte[] key) {
+    public byte[] get(byte[] key) {
         if (!bloomFilter.mightContain(key))
             return null;
 
-        long offset = getCandidateOffset(key);
+        int offsetIndex = getCandidateOffsetIndex(key);
+        long offset = sparseOffsets.getLong(offsetIndex);
+        int remaining = size - sparseSizeCount.getInt(offsetIndex);
         is.seek(offset);
 
-        Item it;
         int cmp = 1;
+        int searchKeyLen = key.length, readKeyLen, readValueLen;
 
-        while ((it = is.readItem()) != null &&
-                it.key().length > 0 &&
-                (cmp = compare(key, it.key())) > 0) {
+        byte[] readKey;
+
+        while (cmp > 0 && remaining > 0) {
+
+            remaining--;
+            readKeyLen = is.readVByteInt();
+
+            // gone too far
+            if (readKeyLen > searchKeyLen) {
+                return null;
+            }
+
+            // gone too short
+            if (readKeyLen < searchKeyLen) {
+                readValueLen = is.readVByteInt();
+                is.skip(readKeyLen + readValueLen);
+                continue;
+            }
+
+            // read full key, compare, if equal read value
+            readValueLen = is.readVByteInt();
+            readKey = is.readNBytes(readKeyLen);
+            cmp = compare(key, readKey);
+
+            if (cmp == 0) {
+                return is.readNBytes(readValueLen);
+            } else {
+                is.skip(readValueLen);
+            }
         }
 
-        return cmp == 0 ? it : null;
+        return null;
     }
 
     /**
@@ -132,7 +167,7 @@ public class SSTable {
      *
      * @return Table iterator
      */
-    public Iterator<Item> iterator() {
+    public Iterator<ByteArrayPair> iterator() {
         is.seek(0);
         return new SSTableIterator(this);
     }
@@ -144,7 +179,7 @@ public class SSTable {
         is.close();
     }
 
-    private long getCandidateOffset(byte[] key) {
+    private int getCandidateOffsetIndex(byte[] key) {
         int low = 0;
         int high = sparseOffsets.size() - 1;
 
@@ -157,29 +192,31 @@ public class SSTable {
             else if (cmp > 0)
                 low = mid;
             else
-                return sparseOffsets.getLong(mid);
+                return mid;
         }
-        return sparseOffsets.getLong(low);
+        return low;
     }
 
-    private void writeItems(String filename, Iterable<Item> items, int sampleSize, int numItems) {
-        ItemsOutputStream ios = new ItemsOutputStream(filename + DATA_FILE_EXTENSION);
+    private void writeItems(String filename, Iterable<ByteArrayPair> items, int sampleSize, int numItems) {
+        BaseOutputStream ios = new BaseOutputStream(filename + DATA_FILE_EXTENSION);
 
         sparseOffsets = new LongArrayList();
+        sparseSizeCount = new IntArrayList();
         sparseKeys = new ObjectArrayList<>();
         bloomFilter = new BloomFilter(numItems);
 
         // write items and populate indexes
         int size = 0;
         long offset = 0L;
-        for (Item item : items) {
+        for (ByteArrayPair item : items) {
             if (size % sampleSize == 0) {
                 sparseOffsets.add(offset);
+                sparseSizeCount.add(size);
                 sparseKeys.add(item.key());
             }
             bloomFilter.add(item.key());
 
-            offset += ios.writeItem(item);
+            offset += ios.writeBytePair(item);
             size++;
         }
         ios.close();
@@ -191,13 +228,21 @@ public class SSTable {
 
         BaseOutputStream indexOs = new BaseOutputStream(filename + INDEX_FILE_EXTENSION);
         indexOs.writeVByteInt(size);
-        indexOs.writeVByteInt(sparseOffsets.size());
+
+        int sparseSize = sparseOffsets.size();
+        indexOs.writeVByteInt(sparseSize);
 
         // skip first offset, always 0
-        long prev = 0L;
-        for (int i = 1; i < sparseOffsets.size(); i++) {
-            indexOs.writeVByteLong(sparseOffsets.getLong(i) - prev);
-            prev = sparseOffsets.getLong(i);
+        long prevOffset = 0L;
+        for (int i = 1; i < sparseSize; i++) {
+            indexOs.writeVByteLong(sparseOffsets.getLong(i) - prevOffset);
+            prevOffset = sparseOffsets.getLong(i);
+        }
+
+        int prevSize = 0;
+        for (int i = 1; i < sparseSize; i++) {
+            indexOs.writeVByteInt(sparseSizeCount.getInt(i) - prevSize);
+            prevSize = sparseSizeCount.getInt(i);
         }
 
         for (byte[] key : sparseKeys) {
@@ -208,16 +253,25 @@ public class SSTable {
         indexOs.close();
     }
 
-    private record SSTableIterator(SSTable table) implements Iterator<Item> {
+    private static class SSTableIterator implements Iterator<ByteArrayPair> {
 
-        @Override
-        public boolean hasNext() {
-            return table.is.hasNext();
+        private final SSTable table;
+        int remaining;
+
+        public SSTableIterator(SSTable table) {
+            this.table = table;
+            remaining = table.size;
         }
 
         @Override
-        public Item next() {
-            return table.is.readItem();
+        public boolean hasNext() {
+            return remaining > 0;
+        }
+
+        @Override
+        public ByteArrayPair next() {
+            remaining--;
+            return table.is.readBytePair();
         }
     }
 
@@ -228,12 +282,12 @@ public class SSTable {
      * keeping track of the last key we saw, and skipping over any keys that are
      * equal to the last key.
      */
-    private static class SSTableMergerIterator extends IteratorMerger<Item> implements Iterable<Item> {
+    private static class SSTableMergerIterator extends IteratorMerger<ByteArrayPair> implements Iterable<ByteArrayPair> {
 
-        private Item last;
+        private ByteArrayPair last;
 
         @SafeVarargs
-        public SSTableMergerIterator(Iterator<Item>... iterators) {
+        public SSTableMergerIterator(Iterator<ByteArrayPair>... iterators) {
             super(iterators);
             last = super.next();
         }
@@ -244,19 +298,19 @@ public class SSTable {
         }
 
         @Override
-        public Item next() {
-            Item next = super.next();
+        public ByteArrayPair next() {
+            ByteArrayPair next = super.next();
             while (next != null && last.compareTo(next) == 0)
                 next = super.next();
 
-            Item toReturn = last;
+            ByteArrayPair toReturn = last;
             last = next;
 
             return toReturn;
         }
 
         @Override
-        public Iterator<Item> iterator() {
+        public Iterator<ByteArrayPair> iterator() {
             return this;
         }
     }

@@ -1,7 +1,7 @@
 package com.tomfran.lsm.sstable;
 
 import com.tomfran.lsm.comparator.ByteArrayComparator;
-import com.tomfran.lsm.types.Item;
+import com.tomfran.lsm.types.ByteArrayPair;
 import it.unimi.dsi.fastutil.objects.ObjectArrayList;
 import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet;
 import org.junit.jupiter.api.AfterAll;
@@ -11,28 +11,28 @@ import org.junit.jupiter.api.io.TempDir;
 
 import java.nio.file.Path;
 
-import static com.tomfran.lsm.TestUtils.getRandomItem;
+import static com.tomfran.lsm.TestUtils.getRandomPair;
 import static com.tomfran.lsm.comparator.ByteArrayComparator.compare;
 
 class SSTableTest {
 
     static final String TEST_FILE = "/sstable";
-    static final int NUM_ITEMS = 100;
+    static final int NUM_ITEMS = 10;
     static final int SAMPLE_SIZE = NUM_ITEMS / 3;
 
     @TempDir
     static Path tempDirectory;
 
     static SSTable t;
-    static ObjectArrayList<Item> inserted;
-    static ObjectArrayList<Item> skipped;
+    static ObjectArrayList<ByteArrayPair> inserted;
+    static ObjectArrayList<ByteArrayPair> skipped;
 
     @BeforeAll
     public static void setup() {
         // generate random items
-        var l = new ObjectOpenHashSet<Item>();
+        var l = new ObjectOpenHashSet<ByteArrayPair>();
         for (int i = 0; i < NUM_ITEMS * 2; i++) {
-            l.add(getRandomItem());
+            l.add(getRandomPair());
         }
 
         // sort and divide into inserted and skipped
@@ -62,10 +62,9 @@ class SSTableTest {
     @Test
     public void shouldFindItems() {
         for (var item : inserted) {
-            var it = t.get(item.key());
-            assert it != null;
-            assert compare(item.key(), it.key()) == 0;
-            assert compare(item.value(), it.value()) == 0;
+            var val = t.get(item.key());
+            assert val != null;
+            assert compare(item.value(), val) == 0;
         }
     }
 

@@ -2,7 +2,7 @@ package com.tomfran.lsm.tree;
 
 import com.tomfran.lsm.memtable.Memtable;
 import com.tomfran.lsm.sstable.SSTable;
-import com.tomfran.lsm.types.Item;
+import com.tomfran.lsm.types.ByteArrayPair;
 
 import java.util.LinkedList;
 
@@ -20,7 +20,7 @@ public class LSMTree {
         tables = new LinkedList<>();
     }
 
-    public void add(Item item) {
+    public void add(ByteArrayPair item) {
         mutableMemtable.add(item);
         checkMemtableSize();
     }
@@ -37,8 +37,8 @@ public class LSMTree {
         }
     }
 
-    public Item get(byte[] key) {
-        Item result;
+    public ByteArrayPair get(byte[] key) {
+        ByteArrayPair result;
 
         if ((result = mutableMemtable.get(key)) != null)
             return result;
@@ -47,9 +47,10 @@ public class LSMTree {
             if ((result = memtable.get(key)) != null)
                 return result;
 
+        byte[] tmp;
         for (SSTable table : tables)
-            if ((result = table.get(key)) != null)
-                return result;
+            if ((tmp = table.get(key)) != null)
+                return new ByteArrayPair(key, tmp);
 
         return null;
     }

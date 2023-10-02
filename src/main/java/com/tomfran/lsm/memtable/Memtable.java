@@ -1,7 +1,7 @@
 package com.tomfran.lsm.memtable;
 
 import com.tomfran.lsm.sstable.SSTable;
-import com.tomfran.lsm.types.Item;
+import com.tomfran.lsm.types.ByteArrayPair;
 
 public class Memtable {
 
@@ -17,16 +17,16 @@ public class Memtable {
         list = new SkipList(numElements);
     }
 
-    public void add(Item item) {
+    public void add(ByteArrayPair item) {
         list.add(item);
     }
 
-    public Item get(byte[] key) {
+    public ByteArrayPair get(byte[] key) {
         return list.get(key);
     }
 
     public void remove(byte[] key) {
-        list.add(new Item(key, null));
+        list.add(new ByteArrayPair(key, null));
     }
 
     public int size() {

@@ -31,7 +31,10 @@ The steps are:
 1. Use the Bloom filter to test whether the key might be in the table;
 2. If the key might be present, use binary search on the index to find the maximum lower bound of the key;
 3. Scan the data from the position found in the previous step to find the key-value pair. The search
-   can stop when the we are seeing a key greater than the one we are looking for.
+   can stop when we are seeing a key greater than the one we are looking for, or when we reach the end of the table.
+
+The search is as lazy as possible, meaning that we read the minimum amount of data from disk,
+for instance, if the next key length is smaller than the one we are looking for, we can skip the whole key-value pair.
 
 ### Persistence
 
@@ -52,6 +55,7 @@ A table is persisted to disk when it is created. A base filename is defined, and
 - `n`: number of entries in the index;
 - `o_1, o_2 - o_1, ..., o_n - o_n-1`: offsets of the key-value pairs in the data file, skipping
   the first one;
+- `s_1, s_2, ..., s_n`: remaining keys after a sparse index entry, used to exit from search;
 - `<key_len_1, key_1, ... key_len_n, key_n>`: keys in the index.
 
 **Filter format**

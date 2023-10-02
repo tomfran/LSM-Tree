@@ -1,6 +1,7 @@
 package com.tomfran.lsm.sstable;
 
-import com.tomfran.lsm.types.Item;
+import com.tomfran.lsm.comparator.ByteArrayComparator;
+import com.tomfran.lsm.types.ByteArrayPair;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -10,7 +11,7 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 
-import static com.tomfran.lsm.TestUtils.assertItemEquals;
+import static com.tomfran.lsm.TestUtils.assertPairEqual;
 
 public class SSTableMergeTest {
 
@@ -18,7 +19,7 @@ public class SSTableMergeTest {
     @TempDir
     static Path tempDirectory;
     static SSTable merge, first, second;
-    static List<Item> firstItems, secondItems, expectedItems;
+    static List<ByteArrayPair> firstItems, secondItems, expectedItems;
 
     @BeforeAll
     public static void setup() {
@@ -29,8 +30,8 @@ public class SSTableMergeTest {
 
         // generate overlapping items
         int n = 10;
-        firstItems = generateItems(0, n, false);
-        secondItems = generateItems(n - n / 2, n * 2, true);
+        firstItems = generatePairList(0, n, false);
+        secondItems = generatePairList(n - n / 2, n * 2, true);
 
         // expected is all first items and all second items except the first n/2 overlapping ones
         expectedItems.addAll(firstItems);
@@ -49,10 +50,10 @@ public class SSTableMergeTest {
         second.close();
     }
 
-    private static List<Item> generateItems(int start, int end, boolean incr) {
-        ArrayList<Item> result = new ArrayList<>();
+    private static List<ByteArrayPair> generatePairList(int start, int end, boolean incr) {
+        ArrayList<ByteArrayPair> result = new ArrayList<>();
         for (int i = start; i < end; i++)
-            result.add(new Item(new byte[]{(byte) i}, new byte[]{(byte) (i + (incr ? 1 : 0))}));
+            result.add(new ByteArrayPair(new byte[]{(byte) i}, new byte[]{(byte) (i + (incr ? 1 : 0))}));
 
         return result;
     }
@@ -60,9 +61,9 @@ public class SSTableMergeTest {
     @Test
     public void shouldGetItems() {
         for (var item : expectedItems) {
-            var it = merge.get(item.key());
-            assert it != null;
-            assertItemEquals(item, it);
+            var val = merge.get(item.key());
+            assert val != null;
+            assert ByteArrayComparator.compare(item.value(), val) == 0;
         }
     }
 
@@ -74,7 +75,7 @@ public class SSTableMergeTest {
         while (it.hasNext()) {
             var item = it.next();
             var expected = expectedItems.get(i++);
-            assertItemEquals(expected, item);
+            assertPairEqual(expected, item);
         }
 
         assert i == expectedItems.size() : "expected " + expectedItems.size() + " items, got " + i;

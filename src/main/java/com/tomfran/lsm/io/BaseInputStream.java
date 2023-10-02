@@ -1,5 +1,6 @@
 package com.tomfran.lsm.io;
 
+import com.tomfran.lsm.types.ByteArrayPair;
 import it.unimi.dsi.fastutil.io.FastBufferedInputStream;
 
 import java.io.FileInputStream;
@@ -62,6 +63,37 @@ public class BaseInputStream {
     public byte[] readNBytes(int n) {
         try {
             return fis.readNBytes(n);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    public ByteArrayPair readBytePair() {
+        try {
+            int keyLength = readVByteInt();
+            int valueLength = readVByteInt();
+
+            return new ByteArrayPair(
+                    readNBytes(keyLength),
+                    readNBytes(valueLength)
+            );
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
+    public byte[] readByteArray() {
+        try {
+            int len = readVByteInt();
+            return fis.readNBytes(len);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    public long skip(int n) {
+        try {
+            return fis.skip(n);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }

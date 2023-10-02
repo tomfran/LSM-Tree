@@ -4,7 +4,7 @@ import java.util.Arrays;
 
 import static com.tomfran.lsm.comparator.ByteArrayComparator.compare;
 
-public record Item(byte[] key, byte[] value) implements Comparable<Item> {
+public record ByteArrayPair(byte[] key, byte[] value) implements Comparable<ByteArrayPair> {
 
     @Override
     public int hashCode() {
@@ -12,7 +12,7 @@ public record Item(byte[] key, byte[] value) implements Comparable<Item> {
     }
 
     @Override
-    public int compareTo(Item o) {
+    public int compareTo(ByteArrayPair o) {
         return compare(key, o.key);
     }
 

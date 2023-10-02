@@ -1,7 +1,7 @@
 package com.tomfran.lsm.memtable;
 
 import com.tomfran.lsm.TestUtils;
-import com.tomfran.lsm.types.Item;
+import com.tomfran.lsm.types.ByteArrayPair;
 import it.unimi.dsi.fastutil.objects.ObjectArrayList;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Order;
@@ -16,14 +16,14 @@ import static com.tomfran.lsm.comparator.ByteArrayComparator.compare;
 class SkipListTest {
 
     static SkipList l;
-    static ObjectArrayList<Item> items;
+    static ObjectArrayList<ByteArrayPair> items;
 
     @BeforeAll
     public static void setup() {
         l = new SkipList(100);
         items = new ObjectArrayList<>();
 
-        Stream.generate(TestUtils::getRandomItem)
+        Stream.generate(TestUtils::getRandomPair)
                 .limit(100)
                 .forEach(items::add);
 
@@ -33,7 +33,7 @@ class SkipListTest {
     @Test
     @Order(1)
     public void shouldFind() {
-        for (Item item : items) {
+        for (ByteArrayPair item : items) {
             var found = l.get(item.key());
             assert found != null;
             assert compare(found.key(), item.key()) == 0;
@@ -44,7 +44,7 @@ class SkipListTest {
     @Test
     @Order(2)
     public void shouldRemove() {
-        for (Item item : items.subList(0, 50)) {
+        for (ByteArrayPair item : items.subList(0, 50)) {
             l.remove(item.key());
         }
 

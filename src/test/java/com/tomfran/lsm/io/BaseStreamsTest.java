@@ -1,5 +1,6 @@
 package com.tomfran.lsm.io;
 
+import com.tomfran.lsm.TestUtils;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
@@ -25,6 +26,9 @@ public class BaseStreamsTest {
         var longList = Stream.generate(rn::nextLong).map(Math::abs).limit(1000).toList();
         longList.forEach(os::writeVByteLong);
 
+        var pairList = Stream.generate(TestUtils::getRandomPair).limit(1000).toList();
+        pairList.forEach(os::writeBytePair);
+
         os.close();
 
         var is = new BaseInputStream(tempDirectory + "stream");
@@ -37,6 +41,12 @@ public class BaseStreamsTest {
         longList.forEach(i -> {
             var read = is.readVByteLong();
             assert read == i;
+        });
+
+        pairList.forEach(i -> {
+            var read = is.readBytePair();
+            assert read != null;
+            TestUtils.assertPairEqual(i, read);
         });
     }
 

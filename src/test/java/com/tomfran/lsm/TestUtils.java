@@ -1,6 +1,6 @@
 package com.tomfran.lsm;
 
-import com.tomfran.lsm.types.Item;
+import com.tomfran.lsm.types.ByteArrayPair;
 
 import java.util.List;
 import java.util.Random;
@@ -13,8 +13,8 @@ public class TestUtils {
     static final int MIN_BYTES_LENGTH = 10, MAX_BYTES_LENGTH = 500;
     static Random rn = new Random();
 
-    public static Item getRandomItem() {
-        return new Item(
+    public static ByteArrayPair getRandomPair() {
+        return new ByteArrayPair(
                 getRandomByteArray(),
                 getRandomByteArray()
         );
@@ -38,7 +38,7 @@ public class TestUtils {
                 .toList();
     }
 
-    public static void assertItemEquals(Item a, Item b) {
+    public static void assertPairEqual(ByteArrayPair a, ByteArrayPair b) {
         assert compare(a.key(), b.key()) == 0;
         assert compare(a.value(), b.value()) == 0;
     }
