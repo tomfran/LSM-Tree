@@ -14,8 +14,8 @@ class IteratorMergerTest {
     public void shouldMerge() {
 
         List<Iterator<Integer>> iteratorList = IntStream.range(0, 10)
-                .mapToObj(i -> IntStream.range(i * 10, i * 10 + 10).boxed().iterator())
-                .collect(Collectors.toList());
+                                                        .mapToObj(i -> IntStream.range(i * 10, i * 10 + 10).boxed().iterator())
+                                                        .collect(Collectors.toList());
 
         Collections.shuffle(iteratorList);
 

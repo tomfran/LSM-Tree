@@ -32,9 +32,10 @@ class BloomFilterAccuracyTest {
         });
 
         int falsePositives = data.stream().limit(INSERTIONS)
-                .mapToInt(d -> b.mightContain(d) ? 1 : 0).sum();
+                                 .mapToInt(d -> b.mightContain(d) ? 1 : 0).sum();
 
         double falsePositiveRate = falsePositives / (double) INSERTIONS;
         results.add(falsePositiveRate);
     }
+
 }

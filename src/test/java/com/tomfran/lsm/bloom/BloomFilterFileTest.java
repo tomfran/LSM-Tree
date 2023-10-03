@@ -29,4 +29,5 @@ public class BloomFilterFileTest {
             assert bf.bits[i] == bf2.bits[i];
         }
     }
+
 }

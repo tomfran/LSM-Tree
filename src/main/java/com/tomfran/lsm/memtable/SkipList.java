@@ -72,7 +72,8 @@ public class SkipList implements Iterable<ByteArrayPair> {
 
     private int randomLevel() {
         int level = 1;
-        while (rn.nextBoolean() && level < levels)
+        long n = rn.nextLong();
+        while (level < levels && (n & (1L << level)) != 0)
             level++;
         return level;
     }
@@ -155,6 +156,7 @@ public class SkipList implements Iterable<ByteArrayPair> {
     }
 
     private static final class Node {
+
         ByteArrayPair val;
         Node[] next;
 
@@ -162,6 +164,7 @@ public class SkipList implements Iterable<ByteArrayPair> {
             this.val = val;
             this.next = new Node[numLevels];
         }
+
     }
 
     private record SkipListIterator(Node node) implements Iterator<ByteArrayPair> {
@@ -175,6 +178,7 @@ public class SkipList implements Iterable<ByteArrayPair> {
         public ByteArrayPair next() {
             return node.next[0].val;
         }
+
     }
 
 }

@@ -34,12 +34,13 @@ public class TestUtils {
 
     public static List<byte[]> getRandomByteArrayList(int size) {
         return IntStream.range(0, size)
-                .mapToObj(i -> getRandomByteArray())
-                .toList();
+                        .mapToObj(i -> getRandomByteArray())
+                        .toList();
     }
 
     public static void assertPairEqual(ByteArrayPair a, ByteArrayPair b) {
         assert compare(a.key(), b.key()) == 0;
         assert compare(a.value(), b.value()) == 0;
     }
+
 }

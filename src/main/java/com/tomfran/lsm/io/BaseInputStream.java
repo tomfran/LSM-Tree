@@ -105,4 +105,5 @@ public class BaseInputStream {
             throw new RuntimeException(e);
         }
     }
+
 }

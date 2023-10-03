@@ -37,8 +37,8 @@ class SSTableTest {
 
         // sort and divide into inserted and skipped
         var items = l.stream()
-                .sorted((a, b) -> ByteArrayComparator.compare(a.key(), b.key()))
-                .toList();
+                     .sorted((a, b) -> ByteArrayComparator.compare(a.key(), b.key()))
+                     .toList();
 
         inserted = new ObjectArrayList<>();
         skipped = new ObjectArrayList<>();
@@ -88,4 +88,5 @@ class SSTableTest {
 
         assert !it2.hasNext();
     }
+
 }

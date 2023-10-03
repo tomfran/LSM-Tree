@@ -273,6 +273,7 @@ public class SSTable {
             remaining--;
             return table.is.readBytePair();
         }
+
     }
 
     /**
@@ -313,6 +314,7 @@ public class SSTable {
         public Iterator<ByteArrayPair> iterator() {
             return this;
         }
+
     }
 
 }

@@ -24,8 +24,8 @@ class SkipListTest {
         items = new ObjectArrayList<>();
 
         Stream.generate(TestUtils::getRandomPair)
-                .limit(100)
-                .forEach(items::add);
+              .limit(100)
+              .forEach(items::add);
 
         items.forEach(l::add);
     }

@@ -31,8 +31,8 @@ public class SSTableReconstructTest {
         }
 
         var items = l.stream()
-                .sorted((a, b) -> compare(a.key(), b.key()))
-                .toList();
+                     .sorted((a, b) -> compare(a.key(), b.key()))
+                     .toList();
 
         t1 = new SSTable(tempDirectory + FILE1, items, 3, items.size());
 

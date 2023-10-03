@@ -45,8 +45,8 @@ public class SSTableBenchmark {
 
         // sort and divide into inserted and skipped
         var items = l.stream()
-                .sorted((a, b) -> ByteArrayComparator.compare(a.key(), b.key()))
-                .toList();
+                     .sorted((a, b) -> ByteArrayComparator.compare(a.key(), b.key()))
+                     .toList();
 
         var inserted = new ObjectArrayList<ByteArrayPair>();
         var skipped = new ObjectArrayList<ByteArrayPair>();
@@ -106,4 +106,5 @@ public class SSTableBenchmark {
 
         index = (index + 1) % skippedArray.length;
     }
+
 }
