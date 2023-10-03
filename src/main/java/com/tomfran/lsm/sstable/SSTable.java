@@ -96,7 +96,7 @@ public class SSTable {
 
         int sizeCumulative = 0;
         sparseSizeCount.add(sizeCumulative);
-        for (int i = 0; i < sparseSize; i++) {
+        for (int i = 0; i < sparseSize - 1; i++) {
             sizeCumulative += indexIs.readVByteInt();
             sparseSizeCount.add(sizeCumulative);
         }

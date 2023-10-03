@@ -51,10 +51,10 @@ public class SSTableReconstructTest {
         assert t2.sparseOffsets.size() == t1.sparseOffsets.size();
         for (var i = 0; i < t2.sparseOffsets.size(); i++)
             assert t2.sparseOffsets.getLong(i) == t1.sparseOffsets.getLong(i);
-//
-//        assert t2.sparseKeys.size() == t1.sparseKeys.size() : "keys lenght don't match";
-//        for (var i = 0; i < t2.sparseKeys.size(); i++)
-//            assert compare(t2.sparseKeys.get(i), t1.sparseKeys.get(i)) == 0 : "keys don't match";
+
+        assert t2.sparseKeys.size() == t1.sparseKeys.size() : "keys lenght don't match";
+        for (var i = 0; i < t2.sparseKeys.size(); i++)
+            assert compare(t2.sparseKeys.get(i), t1.sparseKeys.get(i)) == 0 : "keys don't match";
 
         t2.close();
     }
