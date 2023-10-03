@@ -21,7 +21,7 @@ public class Memtable {
         list.add(item);
     }
 
-    public ByteArrayPair get(byte[] key) {
+    public byte[] get(byte[] key) {
         return list.get(key);
     }
 

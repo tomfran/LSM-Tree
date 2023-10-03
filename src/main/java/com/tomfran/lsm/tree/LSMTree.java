@@ -37,8 +37,8 @@ public class LSMTree {
         }
     }
 
-    public ByteArrayPair get(byte[] key) {
-        ByteArrayPair result;
+    public byte[] get(byte[] key) {
+        byte[] result;
 
         if ((result = mutableMemtable.get(key)) != null)
             return result;
@@ -47,10 +47,9 @@ public class LSMTree {
             if ((result = memtable.get(key)) != null)
                 return result;
 
-        byte[] tmp;
         for (SSTable table : tables)
-            if ((tmp = table.get(key)) != null)
-                return new ByteArrayPair(key, tmp);
+            if ((result = table.get(key)) != null)
+                return result;
 
         return null;
     }

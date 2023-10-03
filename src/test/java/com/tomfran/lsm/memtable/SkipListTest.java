@@ -36,8 +36,7 @@ class SkipListTest {
         for (ByteArrayPair item : items) {
             var found = l.get(item.key());
             assert found != null;
-            assert compare(found.key(), item.key()) == 0;
-            assert compare(found.value(), item.value()) == 0;
+            assert compare(found, item.value()) == 0;
         }
     }
 
@@ -56,8 +55,7 @@ class SkipListTest {
                 assert found == null;
             } else {
                 assert found != null;
-                assert compare(found.key(), item.key()) == 0;
-                assert compare(found.value(), item.value()) == 0;
+                assert compare(found, item.value()) == 0;
             }
         }
     }

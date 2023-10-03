@@ -52,13 +52,13 @@ public class SkipList implements Iterable<ByteArrayPair> {
     public void add(ByteArrayPair item) {
         Node current = sentinel;
         for (int i = levels - 1; i >= 0; i--) {
-            while (current.next[i] != null && current.next[i].value.compareTo(item) < 0)
+            while (current.next[i] != null && current.next[i].val.compareTo(item) < 0)
                 current = current.next[i];
             buffer[i] = current;
         }
 
-        if (current.next[0] != null && current.next[0].value.compareTo(item) == 0) {
-            current.next[0].value = item;
+        if (current.next[0] != null && current.next[0].val.compareTo(item) == 0) {
+            current.next[0].val = item;
             return;
         }
 
@@ -83,15 +83,15 @@ public class SkipList implements Iterable<ByteArrayPair> {
      * @param key The key of the item to retrieve.
      * @return The item if found, null otherwise.
      */
-    public ByteArrayPair get(byte[] key) {
+    public byte[] get(byte[] key) {
         Node current = sentinel;
         for (int i = levels - 1; i >= 0; i--) {
-            while (current.next[i] != null && compare(current.next[i].value.key(), key) < 0)
+            while (current.next[i] != null && compare(current.next[i].val.key(), key) < 0)
                 current = current.next[i];
         }
 
-        if (current.next[0] != null && compare(current.next[0].value.key(), key) == 0)
-            return current.next[0].value;
+        if (current.next[0] != null && compare(current.next[0].val.key(), key) == 0)
+            return current.next[0].val.value();
 
         return null;
     }
@@ -104,12 +104,12 @@ public class SkipList implements Iterable<ByteArrayPair> {
     public void remove(byte[] key) {
         Node current = sentinel;
         for (int i = levels - 1; i >= 0; i--) {
-            while (current.next[i] != null && compare(current.next[i].value.key(), key) < 0)
+            while (current.next[i] != null && compare(current.next[i].val.key(), key) < 0)
                 current = current.next[i];
             buffer[i] = current;
         }
 
-        if (current.next[0] != null && compare(current.next[0].value.key(), key) == 0) {
+        if (current.next[0] != null && compare(current.next[0].val.key(), key) == 0) {
             boolean last = current.next[0].next[0] == null;
             for (int i = 0; i < levels; i++) {
                 if (buffer[i].next[i] != current.next[0])
@@ -146,7 +146,7 @@ public class SkipList implements Iterable<ByteArrayPair> {
             sb.append(String.format("Level %2d: ", i));
             Node current = sentinel;
             while (current.next[i] != null) {
-                sb.append(current.next[i].value).append(" -> ");
+                sb.append(current.next[i].val).append(" -> ");
                 current = current.next[i];
             }
             sb.append("END\n");
@@ -155,11 +155,11 @@ public class SkipList implements Iterable<ByteArrayPair> {
     }
 
     private static final class Node {
-        ByteArrayPair value;
+        ByteArrayPair val;
         Node[] next;
 
-        Node(ByteArrayPair value, int numLevels) {
-            this.value = value;
+        Node(ByteArrayPair val, int numLevels) {
+            this.val = val;
             this.next = new Node[numLevels];
         }
     }
@@ -173,7 +173,7 @@ public class SkipList implements Iterable<ByteArrayPair> {
 
         @Override
         public ByteArrayPair next() {
-            return node.next[0].value;
+            return node.next[0].val;
         }
     }
 

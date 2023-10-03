@@ -82,15 +82,6 @@ public class BaseInputStream {
         }
     }
 
-    public byte[] readByteArray() {
-        try {
-            int len = readVByteInt();
-            return fis.readNBytes(len);
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-    }
-
     public long skip(int n) {
         try {
             return fis.skip(n);
@@ -102,14 +93,6 @@ public class BaseInputStream {
     public void seek(long offset) {
         try {
             fis.position(offset);
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-    }
-
-    public boolean hasNext() {
-        try {
-            return fis.available() > 0;
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
