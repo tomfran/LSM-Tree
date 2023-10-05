@@ -1,6 +1,7 @@
 plugins {
-    id("java")
+    id "java"
     id "me.champeau.jmh" version "0.7.1"
+    id "application"
 }
 
 group = "com.tomfran"
@@ -27,8 +28,20 @@ jmh {
     fork = 1
     warmupIterations = 5
     iterations = 10
-    benchmarkMode = ['thrpt']
+    benchmarkMode = ['avgt']
     jmhTimeout = '15s'
     jmhVersion = '1.37'
     resultFormat = 'JSON'
+}
+
+ext {
+    javaMainClass = "com.tomfran.lsm.Main"
+}
+
+application {
+    mainClassName = javaMainClass
+}
+
+run {
+    standardInput = System.in
 }

@@ -3,10 +3,10 @@ package com.tomfran.lsm.memtable;
 import com.tomfran.lsm.sstable.SSTable;
 import com.tomfran.lsm.types.ByteArrayPair;
 
-public class Memtable {
+import java.util.Iterator;
 
-    static final int DEFAULT_SSTABLE_SAMPLE_SIZE = 1 << 10;
-
+public class Memtable implements Iterable<ByteArrayPair> {
+    
     SkipList list;
 
     public Memtable() {
@@ -26,15 +26,20 @@ public class Memtable {
     }
 
     public void remove(byte[] key) {
-        list.add(new ByteArrayPair(key, null));
+        list.add(new ByteArrayPair(key, new byte[]{}));
     }
 
     public int size() {
         return list.size();
     }
 
-    public SSTable flush(String filename) {
-        return new SSTable(filename, list, DEFAULT_SSTABLE_SAMPLE_SIZE, list.size());
+    public SSTable flush(String filename, int sampleSize) {
+        return new SSTable(filename, list, sampleSize);
+    }
+
+    @Override
+    public Iterator<ByteArrayPair> iterator() {
+        return list.iterator();
     }
 
 }

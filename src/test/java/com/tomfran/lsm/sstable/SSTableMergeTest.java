@@ -1,6 +1,7 @@
 package com.tomfran.lsm.sstable;
 
 import com.tomfran.lsm.comparator.ByteArrayComparator;
+import com.tomfran.lsm.memtable.Memtable;
 import com.tomfran.lsm.types.ByteArrayPair;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
@@ -15,10 +16,11 @@ import static com.tomfran.lsm.TestUtils.assertPairEqual;
 
 public class SSTableMergeTest {
 
-    static final String MERGE_FILE = "/merge", TABLE_1_FILE = "/test1", TABLE_2_FILE = "/test2";
+    static final String MERGE_FILE = "/merge", TABLE_FILE = "/test";
     @TempDir
     static Path tempDirectory;
-    static SSTable merge, first, second;
+    static Memtable first;
+    static SSTable merge, second;
     static List<ByteArrayPair> firstItems, secondItems, expectedItems;
 
     @BeforeAll
@@ -30,6 +32,7 @@ public class SSTableMergeTest {
 
         // generate overlapping items
         int n = 10;
+
         firstItems = generatePairList(0, n, false);
         secondItems = generatePairList(n - n / 2, n * 2, true);
 
@@ -37,8 +40,10 @@ public class SSTableMergeTest {
         expectedItems.addAll(firstItems);
         secondItems.stream().skip(n / 2).forEach(expectedItems::add);
 
-        first = new SSTable(tempDirectory + TABLE_1_FILE, firstItems, 100, firstItems.size());
-        second = new SSTable(tempDirectory + TABLE_2_FILE, secondItems, 100, secondItems.size());
+
+        first = new Memtable();
+        firstItems.forEach(first::add);
+        second = new SSTable(tempDirectory + TABLE_FILE, secondItems, 100);
 
         merge = SSTable.merge(tempDirectory + MERGE_FILE, 100, first, second);
     }
@@ -46,7 +51,6 @@ public class SSTableMergeTest {
     @AfterAll
     public static void teardown() {
         merge.close();
-        first.close();
         second.close();
     }
 

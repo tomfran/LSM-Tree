@@ -7,7 +7,7 @@ import java.util.concurrent.TimeUnit;
 
 import static com.tomfran.lsm.TestUtils.getRandomByteArray;
 
-@OutputTimeUnit(TimeUnit.SECONDS)
+@OutputTimeUnit(TimeUnit.NANOSECONDS)
 @State(Scope.Benchmark)
 public class BloomFilterBenchmark {
 

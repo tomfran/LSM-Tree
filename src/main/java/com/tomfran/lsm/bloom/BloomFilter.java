@@ -22,9 +22,19 @@ import static java.lang.Math.log;
  */
 public class BloomFilter {
 
+    static final int DEFAULT_SIZE = 1 << 20;
+
     final int size;
     final int hashCount;
     final long[] bits;
+
+    /**
+     * Create a new Bloom filter with the default size and a false positive rate of 0.1%.
+     */
+    public BloomFilter() {
+        this(DEFAULT_SIZE, 0.001);
+    }
+
 
     /**
      * Create a new Bloom filter with the given expected insertions and a false positive rate of 0.1%.
@@ -34,6 +44,7 @@ public class BloomFilter {
     public BloomFilter(int expectedInsertions) {
         this(expectedInsertions, 0.001);
     }
+
 
     /**
      * Create a new Bloom filter with the given expected insertions and false positive rate.

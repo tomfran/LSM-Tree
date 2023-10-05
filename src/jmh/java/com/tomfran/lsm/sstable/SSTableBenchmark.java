@@ -15,7 +15,7 @@ import java.util.concurrent.TimeUnit;
 
 import static com.tomfran.lsm.TestUtils.getRandomPair;
 
-@OutputTimeUnit(TimeUnit.SECONDS)
+@OutputTimeUnit(TimeUnit.NANOSECONDS)
 @State(Scope.Benchmark)
 public class SSTableBenchmark {
 
@@ -59,7 +59,7 @@ public class SSTableBenchmark {
                 skipped.add(e);
         }
 
-        sstable = new SSTable(DIR + "/sst", inserted, SAMPLE_SIZE, inserted.size());
+        sstable = new SSTable(DIR + "/sst", inserted, SAMPLE_SIZE);
 
         // shuffle to avoid sequential access
         Collections.shuffle(inserted);

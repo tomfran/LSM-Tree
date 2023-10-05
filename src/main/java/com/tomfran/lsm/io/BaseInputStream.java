@@ -36,7 +36,7 @@ public class BaseInputStream {
 
             shift += 7;
         }
-        return result;
+        return result - 1;
     }
 
     public long readLong() {

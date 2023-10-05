@@ -104,15 +104,19 @@ the operation on the node. All of them have an average time complexity of `O(log
 I am using [JMH](https://openjdk.java.net/projects/code-tools/jmh/) to run benchmarks,
 the results are obtained on a MacBook Pro (16-inch, 2021) with an M1 Pro processor and 16 GB of RAM.
 
+To run them use `./gradlew jmh`.
+
 ### SSTable
 
 - Negative access: the key is not present in the table, hence the Bloom filter will likely stop the search;
 - Random access: the key is present in the table, the order of the keys is random.
 
 ```
-Benchmark                                       Mode  Cnt         Score        Error  Units
-c.t.l.sstable.SSTableBenchmark.negativeAccess  thrpt   10   3541989.316 ±  78933.780  ops/s
-c.t.l.sstable.SSTableBenchmark.randomAccess    thrpt   10     56157.613 ±    264.314  ops/s
+
+Benchmark Mode Cnt Score Error Units
+c.t.l.sstable.SSTableBenchmark.negativeAccess thrpt 10 3541989.316 ± 78933.780 ops/s
+c.t.l.sstable.SSTableBenchmark.randomAccess thrpt 10 56157.613 ± 264.314 ops/s
+
 ```
 
 ### Bloom filter
@@ -121,9 +125,11 @@ c.t.l.sstable.SSTableBenchmark.randomAccess    thrpt   10     56157.613 ±    26
 - Contains: test whether the keys are present in the Bloom filter.
 
 ```
-Benchmark                                       Mode  Cnt         Score        Error  Units
-c.t.l.bloom.BloomFilterBenchmark.add           thrpt   10   9777191.526 ± 168208.916  ops/s
-c.t.l.bloom.BloomFilterBenchmark.contains      thrpt   10  10724196.205 ±  20411.741  ops/s
+
+Benchmark Mode Cnt Score Error Units
+c.t.l.bloom.BloomFilterBenchmark.add thrpt 10 9777191.526 ± 168208.916 ops/s
+c.t.l.bloom.BloomFilterBenchmark.contains thrpt 10 10724196.205 ± 20411.741 ops/s
+
 ```
 
 ### Skip-List
@@ -132,9 +138,11 @@ c.t.l.bloom.BloomFilterBenchmark.contains      thrpt   10  10724196.205 ±  2041
 - Add/Remove: add and remove keys from a 100k keys skip-list.
 
 ```
-Benchmark                                       Mode  Cnt         Score        Error  Units
-c.t.l.memtable.SkipListBenchmark.addRemove     thrpt   10    684885.546 ±  21793.787  ops/s
-c.t.l.memtable.SkipListBenchmark.get           thrpt   10    823423.128 ±  83028.354  ops/s
+
+Benchmark Mode Cnt Score Error Units
+c.t.l.memtable.SkipListBenchmark.addRemove thrpt 10 684885.546 ± 21793.787 ops/s
+c.t.l.memtable.SkipListBenchmark.get thrpt 10 823423.128 ± 83028.354 ops/s
+
 ```
 
 ---
@@ -149,11 +157,13 @@ c.t.l.memtable.SkipListBenchmark.get           thrpt   10    823423.128 ±  8302
     - [x] Bloom filter
     - [x] Indexes persistence
     - [x] File initialization
+    - [ ] Handle tombstones
 - [ ] Skip-List
     - [x] Operations
     - [x] Iterator
 - [ ] Tree
-    - [ ] Operations
+    - [x] Operations
+    - [ ] Background flush
     - [ ] Background compaction
 - [ ] Benchmarks
     - [x] SSTable

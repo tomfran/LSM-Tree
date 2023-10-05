@@ -167,7 +167,13 @@ public class SkipList implements Iterable<ByteArrayPair> {
 
     }
 
-    private record SkipListIterator(Node node) implements Iterator<ByteArrayPair> {
+    private static class SkipListIterator implements Iterator<ByteArrayPair> {
+
+        Node node;
+
+        SkipListIterator(Node node) {
+            this.node = node;
+        }
 
         @Override
         public boolean hasNext() {
@@ -176,7 +182,10 @@ public class SkipList implements Iterable<ByteArrayPair> {
 
         @Override
         public ByteArrayPair next() {
-            return node.next[0].val;
+            var res = node.next[0].val;
+            node = node.next[0];
+
+            return res;
         }
 
     }

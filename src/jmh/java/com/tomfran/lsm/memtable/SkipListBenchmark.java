@@ -9,7 +9,7 @@ import java.util.concurrent.TimeUnit;
 
 import static com.tomfran.lsm.TestUtils.getRandomPair;
 
-@OutputTimeUnit(TimeUnit.SECONDS)
+@OutputTimeUnit(TimeUnit.NANOSECONDS)
 @State(Scope.Benchmark)
 public class SkipListBenchmark {
 

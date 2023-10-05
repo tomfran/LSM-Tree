@@ -9,11 +9,13 @@ import it.unimi.dsi.fastutil.ints.IntArrayList;
 import it.unimi.dsi.fastutil.longs.LongArrayList;
 import it.unimi.dsi.fastutil.objects.ObjectArrayList;
 
+import java.io.File;
 import java.util.Iterator;
 
 import static com.tomfran.lsm.comparator.ByteArrayComparator.compare;
+import static java.util.Arrays.stream;
 
-public class SSTable {
+public class SSTable implements Iterable<ByteArrayPair> {
 
     public static final String DATA_FILE_EXTENSION = ".data";
     public static final String BLOOM_FILE_EXTENSION = ".bloom";
@@ -36,9 +38,9 @@ public class SSTable {
      * @param sampleSize The number of items to skip between sparse index entries.
      * @param numItems   The number of items in the SSTable.
      */
-    public SSTable(String filename, Iterable<ByteArrayPair> items, int sampleSize, int numItems) {
+    public SSTable(String filename, Iterable<ByteArrayPair> items, int sampleSize) {
         this.filename = filename;
-        writeItems(filename, items, sampleSize, numItems);
+        writeItems(filename, items, sampleSize);
         is = new BaseInputStream(filename + DATA_FILE_EXTENSION);
     }
 
@@ -60,18 +62,12 @@ public class SSTable {
      * @param tables     The SSTables to merge.
      * @return The merged SSTable.
      */
-    static SSTable merge(String filename, int sampleSize, SSTable... tables) {
+    public static SSTable merge(String filename, int sampleSize, Iterable<ByteArrayPair>... tables) {
 
-        int newSize = 0;
-        Iterator<ByteArrayPair>[] iterators = new Iterator[tables.length];
-        for (int i = 0; i < tables.length; i++) {
-            iterators[i] = tables[i].iterator();
-            newSize += tables[i].size;
-        }
+        SSTableMergerIterator it = new SSTableMergerIterator(stream(tables).map(Iterable::iterator)
+                                                                           .toArray(Iterator[]::new));
 
-        SSTableMergerIterator it = new SSTableMergerIterator(iterators);
-
-        return new SSTable(filename, it, sampleSize, newSize);
+        return new SSTable(filename, it, sampleSize);
     }
 
     private void initializeFromDisk(String filename) {
@@ -197,13 +193,13 @@ public class SSTable {
         return low;
     }
 
-    private void writeItems(String filename, Iterable<ByteArrayPair> items, int sampleSize, int numItems) {
+    private void writeItems(String filename, Iterable<ByteArrayPair> items, int sampleSize) {
         BaseOutputStream ios = new BaseOutputStream(filename + DATA_FILE_EXTENSION);
 
         sparseOffsets = new LongArrayList();
         sparseSizeCount = new IntArrayList();
         sparseKeys = new ObjectArrayList<>();
-        bloomFilter = new BloomFilter(numItems);
+        bloomFilter = new BloomFilter();
 
         // write items and populate indexes
         int size = 0;
@@ -253,6 +249,12 @@ public class SSTable {
         indexOs.close();
     }
 
+    public void deleteFiles() {
+        new File(filename + DATA_FILE_EXTENSION).delete();
+        new File(filename + INDEX_FILE_EXTENSION).delete();
+        new File(filename + BLOOM_FILE_EXTENSION).delete();
+    }
+
     private static class SSTableIterator implements Iterator<ByteArrayPair> {
 
         private final SSTable table;
@@ -271,6 +273,7 @@ public class SSTable {
         @Override
         public ByteArrayPair next() {
             remaining--;
+
             return table.is.readBytePair();
         }
 
