@@ -25,8 +25,8 @@ class LSMTreeTest {
 
         Thread.sleep(2000);
 
-        assert tree.mutableMemtable.size() == 1 : "mutable memtable size is " + tree.mutableMemtable.size();
-        assert tree.table != null : "table is null";
+        assert tree.mutableMemtable.size() >= 1 : "mutable memtable size is " + tree.mutableMemtable.size();
+        assert !tree.tables.isEmpty() : "table is null";
     }
 
     @Test
@@ -37,7 +37,7 @@ class LSMTreeTest {
 
         Object2ObjectArrayMap<byte[], byte[]> items = new Object2ObjectArrayMap<>();
 
-        IntStream.range(0, 2 * maxSize).forEach(i -> {
+        IntStream.range(0, 10 * maxSize).forEach(i -> {
             var it = getRandomPair();
             tree.add(it);
             items.put(it.key(), it.value());

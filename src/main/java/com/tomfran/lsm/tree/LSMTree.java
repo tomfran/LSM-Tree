@@ -26,7 +26,7 @@ public class LSMTree {
 
     Memtable mutableMemtable;
     LinkedList<Memtable> immutableMemtables;
-    SSTable table;
+    LinkedList<SSTable> tables;
     ExecutorService memtableFlusher;
 
     /**
@@ -49,6 +49,7 @@ public class LSMTree {
 
         mutableMemtable = new Memtable(memtableMaxSize);
         immutableMemtables = new LinkedList<>();
+        tables = new LinkedList<>();
         memtableFlusher = newSingleThreadExecutor();
     }
 
@@ -100,8 +101,9 @@ public class LSMTree {
         }
 
         synchronized (tableLock) {
-            if ((result = table.get(key)) != null)
-                return result;
+            for (SSTable table : tables)
+                if ((result = table.get(key)) != null)
+                    return result;
         }
 
         return null;
@@ -136,13 +138,14 @@ public class LSMTree {
         String filename = String.format("%s/sst_%d", dataDir, System.currentTimeMillis());
 
         synchronized (tableLock) {
-            if (table == null)
-                table = new SSTable(filename, memtableToFlush.iterator(), DEFAULT_SSTABLE_SAMPLE_SIZE);
-            else {
-                SSTable newTable = SSTable.merge(filename, DEFAULT_SSTABLE_SAMPLE_SIZE, memtableToFlush, table);
-                table.deleteFiles();
-                table = newTable;
-            }
+            tables.addFirst(new SSTable(filename, memtableToFlush.iterator(), DEFAULT_SSTABLE_SAMPLE_SIZE));
+//            if (table == null)
+//                table = ;
+//            else {
+//                SSTable newTable = SSTable.merge(filename, DEFAULT_SSTABLE_SAMPLE_SIZE, memtableToFlush, table);
+//                table.deleteFiles();
+//                table = newTable;
+//            }
         }
 
         // remove flushed memtable from immutable memtables

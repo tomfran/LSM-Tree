@@ -16,8 +16,8 @@ import static com.tomfran.lsm.TestUtils.getRandomPair;
 public class LSMTreeBenchmark {
 
     static final Path DIR = Path.of("tree_benchmark");
-    static final int NUM_ITEMS = 300000;
-    static final int MEMTABLE_SIZE = 1 << 16;
+    static final int NUM_ITEMS = 1000000;
+    static final int MEMTABLE_SIZE = 1 << 18;
 
     static ByteArrayPair[] items;
     static int index = 0;
