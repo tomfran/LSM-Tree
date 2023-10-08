@@ -23,7 +23,7 @@ class LSMTreeTest {
 
         IntStream.range(0, maxSize + 2).forEach(i -> tree.add(getRandomPair()));
 
-        Thread.sleep(2000);
+        Thread.sleep(500);
 
         assert tree.mutableMemtable.size() >= 1 : "mutable memtable size is " + tree.mutableMemtable.size();
         assert !tree.tables.isEmpty() : "table is null";
@@ -44,7 +44,7 @@ class LSMTreeTest {
         });
 
 
-        Thread.sleep(2000);
+        Thread.sleep(500);
 
         for (var it : items.entrySet())
             assert compare(tree.get(it.getKey()), it.getValue()) == 0;
