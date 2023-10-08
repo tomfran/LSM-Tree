@@ -25,6 +25,7 @@ tasks.test {
 }
 
 jmh {
+//    includes = ['LSMTreeBenchmark.add']
     fork = 1
     warmupIterations = 5
     iterations = 10

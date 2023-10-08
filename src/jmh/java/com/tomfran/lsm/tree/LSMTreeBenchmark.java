@@ -17,6 +17,7 @@ public class LSMTreeBenchmark {
 
     static final Path DIR = Path.of("tree_benchmark");
     static final int NUM_ITEMS = 300000;
+    static final int MEMTABLE_SIZE = 1 << 16;
 
     static ByteArrayPair[] items;
     static int index = 0;
@@ -35,7 +36,7 @@ public class LSMTreeBenchmark {
             items[i] = getRandomPair();
 
         // setup tree
-        tree = new LSMTree(1 << 15, DIR.toString());
+        tree = new LSMTree(MEMTABLE_SIZE, DIR.toString());
     }
 
     @TearDown
