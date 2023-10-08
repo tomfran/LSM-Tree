@@ -59,7 +59,7 @@ public class SSTableBenchmark {
                 skipped.add(e);
         }
 
-        sstable = new SSTable(DIR + "/sst", inserted, SAMPLE_SIZE);
+        sstable = new SSTable(DIR + "/sst", inserted.iterator(), SAMPLE_SIZE);
 
         // shuffle to avoid sequential access
         Collections.shuffle(inserted);
