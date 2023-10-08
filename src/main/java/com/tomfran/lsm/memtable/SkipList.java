@@ -182,7 +182,10 @@ public class SkipList implements Iterable<ByteArrayPair> {
 
         @Override
         public ByteArrayPair next() {
-            var res = node.next[0].val;
+            if (node.next[0] == null)
+                return null;
+
+            ByteArrayPair res = node.next[0].val;
             node = node.next[0];
 
             return res;

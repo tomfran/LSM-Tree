@@ -60,7 +60,7 @@ public class BaseOutputStream {
 
     private byte[] longToVByte(long n) {
         n++;
-        
+
         if (n <= 0) {
             throw new IllegalArgumentException("n must be greater than 0");
         }

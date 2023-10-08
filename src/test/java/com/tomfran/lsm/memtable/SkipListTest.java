@@ -42,6 +42,16 @@ class SkipListTest {
 
     @Test
     @Order(2)
+    public void iteratorTest() {
+        var it = l.iterator();
+        while (it.hasNext()) {
+            it.next();
+        }
+        assert it.next() == null;
+    }
+
+    @Test
+    @Order(3)
     public void shouldRemove() {
         for (ByteArrayPair item : items.subList(0, 50)) {
             l.remove(item.key());
@@ -59,5 +69,6 @@ class SkipListTest {
             }
         }
     }
+
 
 }

@@ -71,7 +71,7 @@ public class LSMTreeBenchmark {
         var value = tree.get(item.key());
 
         bh.consume(value);
-        
+
         index = (index + 1) % NUM_ITEMS;
     }
 

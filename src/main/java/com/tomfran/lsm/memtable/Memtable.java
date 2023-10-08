@@ -1,12 +1,11 @@
 package com.tomfran.lsm.memtable;
 
-import com.tomfran.lsm.sstable.SSTable;
 import com.tomfran.lsm.types.ByteArrayPair;
 
 import java.util.Iterator;
 
 public class Memtable implements Iterable<ByteArrayPair> {
-    
+
     SkipList list;
 
     public Memtable() {
@@ -31,10 +30,6 @@ public class Memtable implements Iterable<ByteArrayPair> {
 
     public int size() {
         return list.size();
-    }
-
-    public SSTable flush(String filename, int sampleSize) {
-        return new SSTable(filename, list, sampleSize);
     }
 
     @Override

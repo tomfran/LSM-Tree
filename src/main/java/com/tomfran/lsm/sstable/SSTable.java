@@ -5,6 +5,7 @@ import com.tomfran.lsm.io.BaseInputStream;
 import com.tomfran.lsm.io.BaseOutputStream;
 import com.tomfran.lsm.types.ByteArrayPair;
 import com.tomfran.lsm.utils.IteratorMerger;
+import com.tomfran.lsm.utils.UniqueSortedIterator;
 import it.unimi.dsi.fastutil.ints.IntArrayList;
 import it.unimi.dsi.fastutil.longs.LongArrayList;
 import it.unimi.dsi.fastutil.objects.ObjectArrayList;
@@ -36,9 +37,8 @@ public class SSTable implements Iterable<ByteArrayPair> {
      * @param filename   The filename to write the SSTable to.
      * @param items      The items to write to the SSTable, assumed to be sorted.
      * @param sampleSize The number of items to skip between sparse index entries.
-     * @param numItems   The number of items in the SSTable.
      */
-    public SSTable(String filename, Iterable<ByteArrayPair> items, int sampleSize) {
+    public SSTable(String filename, Iterator<ByteArrayPair> items, int sampleSize) {
         this.filename = filename;
         writeItems(filename, items, sampleSize);
         is = new BaseInputStream(filename + DATA_FILE_EXTENSION);
@@ -63,11 +63,13 @@ public class SSTable implements Iterable<ByteArrayPair> {
      * @return The merged SSTable.
      */
     public static SSTable merge(String filename, int sampleSize, Iterable<ByteArrayPair>... tables) {
+        Iterator<ByteArrayPair>[] itArray = stream(tables).map(Iterable::iterator)
+                                                          .toArray(Iterator[]::new);
 
-        SSTableMergerIterator it = new SSTableMergerIterator(stream(tables).map(Iterable::iterator)
-                                                                           .toArray(Iterator[]::new));
+        IteratorMerger<ByteArrayPair> merger = new IteratorMerger<>(itArray);
+        UniqueSortedIterator<ByteArrayPair> uniqueSortedIterator = new UniqueSortedIterator<>(merger);
 
-        return new SSTable(filename, it, sampleSize);
+        return new SSTable(filename, uniqueSortedIterator, sampleSize);
     }
 
     private void initializeFromDisk(String filename) {
@@ -193,7 +195,7 @@ public class SSTable implements Iterable<ByteArrayPair> {
         return low;
     }
 
-    private void writeItems(String filename, Iterable<ByteArrayPair> items, int sampleSize) {
+    private void writeItems(String filename, Iterator<ByteArrayPair> items, int sampleSize) {
         BaseOutputStream ios = new BaseOutputStream(filename + DATA_FILE_EXTENSION);
 
         sparseOffsets = new LongArrayList();
@@ -204,7 +206,8 @@ public class SSTable implements Iterable<ByteArrayPair> {
         // write items and populate indexes
         int size = 0;
         long offset = 0L;
-        for (ByteArrayPair item : items) {
+        while (items.hasNext()) {
+            ByteArrayPair item = items.next();
             if (size % sampleSize == 0) {
                 sparseOffsets.add(offset);
                 sparseSizeCount.add(size);
@@ -216,6 +219,10 @@ public class SSTable implements Iterable<ByteArrayPair> {
             size++;
         }
         ios.close();
+
+        if (size == 0) {
+            throw new IllegalArgumentException("Attempted to create an SSTable from an empty iterator");
+        }
 
         this.size = size;
 
@@ -275,47 +282,6 @@ public class SSTable implements Iterable<ByteArrayPair> {
             remaining--;
 
             return table.is.readBytePair();
-        }
-
-    }
-
-    /**
-     * SSTableMergerIterator is an IteratorMerger that merges SSTables.
-     * <p>
-     * When merging SSTables, we want to skip over duplicate keys. This is done by
-     * keeping track of the last key we saw, and skipping over any keys that are
-     * equal to the last key.
-     */
-    private static class SSTableMergerIterator extends IteratorMerger<ByteArrayPair> implements Iterable<ByteArrayPair> {
-
-        private ByteArrayPair last;
-
-        @SafeVarargs
-        public SSTableMergerIterator(Iterator<ByteArrayPair>... iterators) {
-            super(iterators);
-            last = super.next();
-        }
-
-        @Override
-        public boolean hasNext() {
-            return last != null;
-        }
-
-        @Override
-        public ByteArrayPair next() {
-            ByteArrayPair next = super.next();
-            while (next != null && last.compareTo(next) == 0)
-                next = super.next();
-
-            ByteArrayPair toReturn = last;
-            last = next;
-
-            return toReturn;
-        }
-
-        @Override
-        public Iterator<ByteArrayPair> iterator() {
-            return this;
         }
 
     }

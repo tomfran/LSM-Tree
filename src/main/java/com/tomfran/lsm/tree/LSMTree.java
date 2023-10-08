@@ -21,10 +21,10 @@ public class LSMTree {
     final Object immutableMemtablesLock = new Object();
     final Object tableLock = new Object();
 
-    Memtable mutableMemtable;
     final int mutableMemtableMaxSize;
     final String dataDir;
 
+    Memtable mutableMemtable;
     LinkedList<Memtable> immutableMemtables;
     SSTable table;
     ExecutorService memtableFlusher;
@@ -137,9 +137,9 @@ public class LSMTree {
 
         synchronized (tableLock) {
             if (table == null)
-                table = mutableMemtable.flush(filename, DEFAULT_SSTABLE_SAMPLE_SIZE);
+                table = new SSTable(filename, memtableToFlush.iterator(), DEFAULT_SSTABLE_SAMPLE_SIZE);
             else {
-                var newTable = SSTable.merge(filename, DEFAULT_SSTABLE_SAMPLE_SIZE, memtableToFlush, table);
+                SSTable newTable = SSTable.merge(filename, DEFAULT_SSTABLE_SAMPLE_SIZE, memtableToFlush, table);
                 table.deleteFiles();
                 table = newTable;
             }

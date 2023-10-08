@@ -163,7 +163,7 @@ c.t.l.memtable.SkipListBenchmark.get thrpt 10 823423.128 ± 83028.354 ops/s
     - [x] Iterator
 - [ ] Tree
     - [x] Operations
-    - [ ] Background flush
+    - [x] Background flush
     - [ ] Background compaction
 - [ ] Benchmarks
     - [x] SSTable

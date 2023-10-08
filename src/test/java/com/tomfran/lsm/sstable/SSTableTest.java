@@ -51,7 +51,7 @@ class SSTableTest {
                 skipped.add(e);
         }
 
-        t = new SSTable(tempDirectory + TEST_FILE, inserted, SAMPLE_SIZE);
+        t = new SSTable(tempDirectory + TEST_FILE, inserted.iterator(), SAMPLE_SIZE);
     }
 
     @AfterAll

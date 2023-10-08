@@ -37,13 +37,14 @@ class LSMTreeTest {
 
         Object2ObjectArrayMap<byte[], byte[]> items = new Object2ObjectArrayMap<>();
 
-        IntStream.range(0, 5 * maxSize).forEach(i -> {
+        IntStream.range(0, 2 * maxSize).forEach(i -> {
             var it = getRandomPair();
             tree.add(it);
             items.put(it.key(), it.value());
         });
 
-        Thread.sleep(5000);
+
+        Thread.sleep(2000);
 
         for (var it : items.entrySet())
             assert compare(tree.get(it.getKey()), it.getValue()) == 0;

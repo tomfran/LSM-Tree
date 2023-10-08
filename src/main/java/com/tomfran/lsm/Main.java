@@ -26,13 +26,13 @@ public class Main {
         System.out.println(
                 """
                 LSM Tree console
-                                
+
                 Commands:
                 - ins <key> <value> : insert a key-value pair
                 - get <key>         : get a value for a key
                 - del <key>         : delete a key-value pair
                 - exit              : exit the application
-                                
+
                 """
         );
 

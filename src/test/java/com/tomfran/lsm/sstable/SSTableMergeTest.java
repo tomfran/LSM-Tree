@@ -16,10 +16,9 @@ import static com.tomfran.lsm.TestUtils.assertPairEqual;
 
 public class SSTableMergeTest {
 
-    static final String MERGE_FILE = "/merge", TABLE_FILE = "/test";
+    static final String MERGE_FILE = "/merge", TABLE_FILE2 = "/test2";
     @TempDir
     static Path tempDirectory;
-    static Memtable first;
     static SSTable merge, second;
     static List<ByteArrayPair> firstItems, secondItems, expectedItems;
 
@@ -40,10 +39,9 @@ public class SSTableMergeTest {
         expectedItems.addAll(firstItems);
         secondItems.stream().skip(n / 2).forEach(expectedItems::add);
 
-
-        first = new Memtable();
+        var first = new Memtable();
         firstItems.forEach(first::add);
-        second = new SSTable(tempDirectory + TABLE_FILE, secondItems, 100);
+        second = new SSTable(tempDirectory + TABLE_FILE2, secondItems.iterator(), 100);
 
         merge = SSTable.merge(tempDirectory + MERGE_FILE, 100, first, second);
     }

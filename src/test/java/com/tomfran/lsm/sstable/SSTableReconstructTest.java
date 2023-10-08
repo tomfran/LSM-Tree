@@ -34,7 +34,7 @@ public class SSTableReconstructTest {
                      .sorted((a, b) -> compare(a.key(), b.key()))
                      .toList();
 
-        t1 = new SSTable(tempDirectory + FILE1, items, 3);
+        t1 = new SSTable(tempDirectory + FILE1, items.iterator(), 3);
 
         for (var end : List.of(INDEX_FILE_EXTENSION, DATA_FILE_EXTENSION, BLOOM_FILE_EXTENSION))
             Files.copy(Path.of(tempDirectory + FILE1 + end), Path.of(tempDirectory + FILE2 + end));
