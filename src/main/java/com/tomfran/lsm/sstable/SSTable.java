@@ -12,6 +12,7 @@ import it.unimi.dsi.fastutil.objects.ObjectArrayList;
 
 import java.io.File;
 import java.util.Iterator;
+import java.util.List;
 
 import static com.tomfran.lsm.comparator.ByteArrayComparator.compare;
 import static java.util.Arrays.stream;
@@ -257,9 +258,8 @@ public class SSTable implements Iterable<ByteArrayPair> {
     }
 
     public void deleteFiles() {
-        new File(filename + DATA_FILE_EXTENSION).delete();
-        new File(filename + INDEX_FILE_EXTENSION).delete();
-        new File(filename + BLOOM_FILE_EXTENSION).delete();
+        for (var extension : List.of(DATA_FILE_EXTENSION, INDEX_FILE_EXTENSION, BLOOM_FILE_EXTENSION))
+            new File(filename + extension).delete();
     }
 
     private static class SSTableIterator implements Iterator<ByteArrayPair> {

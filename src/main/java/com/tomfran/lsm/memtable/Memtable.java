@@ -1,6 +1,7 @@
 package com.tomfran.lsm.memtable;
 
 import com.tomfran.lsm.types.ByteArrayPair;
+import com.tomfran.lsm.utils.UniqueSortedIterator;
 
 import java.util.Iterator;
 
@@ -34,7 +35,7 @@ public class Memtable implements Iterable<ByteArrayPair> {
 
     @Override
     public Iterator<ByteArrayPair> iterator() {
-        return list.iterator();
+        return new UniqueSortedIterator<>(list.iterator());
     }
 
 }

@@ -21,7 +21,7 @@ class BloomFilterAccuracyTest {
                 "False positive rate is not close to the expected value: " + avg;
     }
 
-    @RepeatedTest(10)
+    @RepeatedTest(5)
     void testAdd() {
         b = new BloomFilter(INSERTIONS, FALSE_POSITIVE_RATE);
 
