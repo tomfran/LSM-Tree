@@ -18,7 +18,7 @@ public class Main {
         if (new File(DIRECTORY).exists())
             deleteDir();
 
-        LSMTree tree = new LSMTree(3, DIRECTORY);
+        LSMTree tree = new LSMTree(3, 2, DIRECTORY);
 
         Scanner scanner = new Scanner(System.in);
         scanner.useDelimiter("\n");

@@ -12,28 +12,28 @@ import static com.tomfran.lsm.comparator.ByteArrayComparator.compare;
 
 class LSMTreeTest {
 
+    final int maxSize = 10, levelSize = 15;
+
     @TempDir
     static Path tempDirectory;
 
     @Test
     public void writeFlush() throws InterruptedException {
-        int maxSize = 10;
-
-        LSMTree tree = new LSMTree(maxSize, tempDirectory + "/test1");
+        LSMTree tree = new LSMTree(maxSize, levelSize, tempDirectory + "/test1");
 
         IntStream.range(0, maxSize + 2).forEach(i -> tree.add(getRandomPair()));
 
         Thread.sleep(500);
 
         assert tree.mutableMemtable.size() >= 1 : "mutable memtable size is " + tree.mutableMemtable.size();
-        assert !tree.tables.isEmpty() : "table is null";
+        assert !tree.tables.get(0).isEmpty() : "table is null";
+
+        tree.stop();
     }
 
     @Test
     public void writeFlow() throws InterruptedException {
-        int maxSize = 10;
-
-        LSMTree tree = new LSMTree(maxSize, tempDirectory + "/test2");
+        LSMTree tree = new LSMTree(maxSize, levelSize, tempDirectory + "/test2");
 
         Object2ObjectArrayMap<byte[], byte[]> items = new Object2ObjectArrayMap<>();
 
@@ -44,10 +44,12 @@ class LSMTreeTest {
         });
 
 
-        Thread.sleep(500);
+        Thread.sleep(1000);
 
         for (var it : items.entrySet())
             assert compare(tree.get(it.getKey()), it.getValue()) == 0;
+
+        tree.stop();
     }
 
 }

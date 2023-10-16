@@ -3,6 +3,7 @@ package com.tomfran.lsm.tree;
 import com.tomfran.lsm.memtable.Memtable;
 import com.tomfran.lsm.sstable.SSTable;
 import com.tomfran.lsm.types.ByteArrayPair;
+import it.unimi.dsi.fastutil.objects.ObjectArrayList;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -13,7 +14,8 @@ import static java.util.concurrent.Executors.newSingleThreadExecutor;
 
 public class LSMTree {
 
-    static final int DEFAULT_MEMTABLE_MAX_SIZE = 1 << 15;
+    static final int DEFAULT_MEMTABLE_MAX_SIZE = 1 << 10;
+    static final int DEFAULT_TABLE_LEVEL_MAX_SIZE = 5;
     static final int DEFAULT_SSTABLE_SAMPLE_SIZE = 1 << 10;
     static final String DEFAULT_DATA_DIRECTORY = "LSM-data";
 
@@ -22,18 +24,20 @@ public class LSMTree {
     final Object tableLock = new Object();
 
     final int mutableMemtableMaxSize;
+    final int tableLevelMaxSize;
     final String dataDir;
 
     Memtable mutableMemtable;
     LinkedList<Memtable> immutableMemtables;
-    LinkedList<SSTable> tables;
+    ObjectArrayList<LinkedList<SSTable>> tables;
     ExecutorService memtableFlusher;
+    ExecutorService tableCompactor;
 
     /**
      * Creates a new LSMTree with a default memtable size and data directory.
      */
     public LSMTree() {
-        this(DEFAULT_MEMTABLE_MAX_SIZE, DEFAULT_DATA_DIRECTORY);
+        this(DEFAULT_MEMTABLE_MAX_SIZE, DEFAULT_TABLE_LEVEL_MAX_SIZE, DEFAULT_DATA_DIRECTORY);
     }
 
     /**
@@ -42,15 +46,19 @@ public class LSMTree {
      * @param memtableMaxSize The maximum size of the memtable before it is flushed to disk.
      * @param dataDir         The directory to store the data in.
      */
-    public LSMTree(int memtableMaxSize, String dataDir) {
-        mutableMemtableMaxSize = memtableMaxSize;
+    public LSMTree(int mutableMemtableMaxSize, int tableLevelMaxSize, String dataDir) {
+        this.mutableMemtableMaxSize = mutableMemtableMaxSize;
+        this.tableLevelMaxSize = tableLevelMaxSize;
         this.dataDir = dataDir;
         createDataDir();
 
-        mutableMemtable = new Memtable(memtableMaxSize);
+        mutableMemtable = new Memtable(mutableMemtableMaxSize);
         immutableMemtables = new LinkedList<>();
-        tables = new LinkedList<>();
+        tables = new ObjectArrayList<>();
+        tables.add(new LinkedList<>());
+
         memtableFlusher = newSingleThreadExecutor();
+        tableCompactor = newSingleThreadExecutor();
     }
 
 
@@ -101,9 +109,10 @@ public class LSMTree {
         }
 
         synchronized (tableLock) {
-            for (SSTable table : tables)
-                if ((result = table.get(key)) != null)
-                    return result;
+            for (LinkedList<SSTable> level : tables)
+                for (SSTable table : level)
+                    if ((result = table.get(key)) != null)
+                        return result;
         }
 
         return null;
@@ -111,6 +120,7 @@ public class LSMTree {
 
     public void stop() {
         memtableFlusher.shutdownNow();
+        tableCompactor.shutdownNow();
     }
 
     private void checkMemtableSize() {
@@ -135,23 +145,43 @@ public class LSMTree {
             memtableToFlush = immutableMemtables.getLast();
         }
 
-        String filename = String.format("%s/sst_%d", dataDir, System.currentTimeMillis());
+        String filename = getTableName();
 
         synchronized (tableLock) {
-            tables.addFirst(new SSTable(filename, memtableToFlush.iterator(), DEFAULT_SSTABLE_SAMPLE_SIZE));
-//            if (table == null)
-//                table = ;
-//            else {
-//                SSTable newTable = SSTable.merge(filename, DEFAULT_SSTABLE_SAMPLE_SIZE, memtableToFlush, table);
-//                table.deleteFiles();
-//                table = newTable;
-//            }
+            tables.get(0).addFirst(new SSTable(filename, memtableToFlush.iterator(), DEFAULT_SSTABLE_SAMPLE_SIZE));
+            tableCompactor.execute(this::compactTables);
         }
 
         // remove flushed memtable from immutable memtables
         synchronized (immutableMemtablesLock) {
             immutableMemtables.removeLast();
         }
+    }
+
+    private void compactTables() {
+        synchronized (tableLock) {
+
+            int n = tables.size();
+
+            for (int i = 0; i < n; i++) {
+                var level = tables.get(i);
+                if (level.size() <= tableLevelMaxSize)
+                    continue;
+
+                var table = SSTable.merge(getTableName(), DEFAULT_SSTABLE_SAMPLE_SIZE, level);
+
+                if (i == n - 1)
+                    tables.add(new LinkedList<>());
+
+                tables.get(i + 1).addFirst(table);
+                level.forEach(SSTable::closeAndDelete);
+                level.clear();
+            }
+        }
+    }
+
+    private String getTableName() {
+        return String.format("%s/sst_%d", dataDir, System.currentTimeMillis());
     }
 
     private void createDataDir() {

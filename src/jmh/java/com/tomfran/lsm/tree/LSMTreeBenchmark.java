@@ -15,65 +15,87 @@ import static com.tomfran.lsm.TestUtils.getRandomPair;
 @State(Scope.Benchmark)
 public class LSMTreeBenchmark {
 
-    static final Path DIR = Path.of("tree_benchmark");
-    static final int NUM_ITEMS = 1000000;
-    static final int MEMTABLE_SIZE = 1 << 18;
+    @State(Scope.Thread)
+    public static class BaseState {
 
-    static ByteArrayPair[] items;
-    static int index = 0;
+        final Path DIR = Path.of("tree_benchmark");
+        final int NUM_ITEMS = 1000000;
+        final int MEMTABLE_SIZE = 1 << 18;
+        final int LEVEL_SIZE = 5;
 
-    LSMTree tree;
+        ByteArrayPair[] items;
+        int index = 0;
 
-    @Setup
-    public void setup() throws IOException {
-        // setup directory
-        if (Files.exists(DIR))
-            deleteDir();
+        LSMTree tree;
 
-        // generate random items
-        items = new ByteArrayPair[NUM_ITEMS];
-        for (int i = 0; i < NUM_ITEMS; i++)
-            items[i] = getRandomPair();
-
-        // setup tree
-        tree = new LSMTree(MEMTABLE_SIZE, DIR.toString());
-    }
-
-    @TearDown
-    public void teardown() throws IOException {
-        tree.stop();
-        deleteDir();
-    }
-
-    private void deleteDir() throws IOException {
-        try (var files = Files.list(DIR)) {
-            files.forEach(f -> {
-                try {
-                    Files.delete(f);
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-            });
+        @Setup
+        public void setup() throws IOException {
+            treeSetup();
         }
-        Files.delete(DIR);
+
+        @TearDown
+        public void teardown() throws IOException {
+            tree.stop();
+            deleteDir();
+        }
+
+        public void treeSetup() throws IOException {
+            // setup directory
+            if (Files.exists(DIR))
+                deleteDir();
+
+            // generate random items
+            items = new ByteArrayPair[NUM_ITEMS];
+            for (int i = 0; i < NUM_ITEMS; i++)
+                items[i] = getRandomPair();
+
+            // setup tree
+            tree = new LSMTree(MEMTABLE_SIZE, LEVEL_SIZE, DIR.toString());
+        }
+
+        public void deleteDir() throws IOException {
+            try (var files = Files.list(DIR)) {
+                files.forEach(f -> {
+                    try {
+                        Files.delete(f);
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                });
+            }
+            Files.delete(DIR);
+        }
+
+    }
+
+    @State(Scope.Thread)
+    public static class GetState extends BaseState {
+
+        @Setup
+        public void setup() throws IOException {
+            treeSetup();
+            for (var it : items)
+                tree.add(it);
+        }
+
     }
 
     @Benchmark
-    public void add() {
-        var item = items[index];
-        tree.add(item);
+    public void add(BaseState s, Blackhole bh) {
+        var item = s.items[s.index];
+        s.tree.add(item);
 
-        index = (index + 1) % NUM_ITEMS;
+        s.index = (s.index + 1) % s.NUM_ITEMS;
     }
 
     @Benchmark
-    public void get(Blackhole bh) {
-        var item = items[index];
-        var value = tree.get(item.key());
+    public void get(GetState s, Blackhole bh) {
+        var item = s.items[s.index];
+        var value = s.tree.get(item.key());
 
         bh.consume(value);
 
-        index = (index + 1) % NUM_ITEMS;
+        s.index = (s.index + 1) % s.NUM_ITEMS;
     }
 
 }

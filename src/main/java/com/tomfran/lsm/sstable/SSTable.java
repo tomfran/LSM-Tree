@@ -11,11 +11,12 @@ import it.unimi.dsi.fastutil.longs.LongArrayList;
 import it.unimi.dsi.fastutil.objects.ObjectArrayList;
 
 import java.io.File;
+import java.util.Arrays;
 import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.List;
 
 import static com.tomfran.lsm.comparator.ByteArrayComparator.compare;
-import static java.util.Arrays.stream;
 
 public class SSTable implements Iterable<ByteArrayPair> {
 
@@ -64,13 +65,17 @@ public class SSTable implements Iterable<ByteArrayPair> {
      * @return The merged SSTable.
      */
     public static SSTable merge(String filename, int sampleSize, Iterable<ByteArrayPair>... tables) {
-        Iterator<ByteArrayPair>[] itArray = stream(tables).map(Iterable::iterator)
-                                                          .toArray(Iterator[]::new);
+        Iterator<ByteArrayPair>[] itArray = Arrays.stream(tables).map(Iterable::iterator)
+                                                  .toArray(Iterator[]::new);
 
         IteratorMerger<ByteArrayPair> merger = new IteratorMerger<>(itArray);
         UniqueSortedIterator<ByteArrayPair> uniqueSortedIterator = new UniqueSortedIterator<>(merger);
 
         return new SSTable(filename, uniqueSortedIterator, sampleSize);
+    }
+
+    public static SSTable merge(String filename, int sampleSize, LinkedList<SSTable> tableLinkedList) {
+        return merge(filename, sampleSize, tableLinkedList.toArray(new Iterable[]{}));
     }
 
     private void initializeFromDisk(String filename) {
@@ -178,6 +183,16 @@ public class SSTable implements Iterable<ByteArrayPair> {
         is.close();
     }
 
+    public void deleteFiles() {
+        for (var extension : List.of(DATA_FILE_EXTENSION, INDEX_FILE_EXTENSION, BLOOM_FILE_EXTENSION))
+            new File(filename + extension).delete();
+    }
+
+    public void closeAndDelete() {
+        close();
+        deleteFiles();
+    }
+
     private int getCandidateOffsetIndex(byte[] key) {
         int low = 0;
         int high = sparseOffsets.size() - 1;
@@ -255,11 +270,6 @@ public class SSTable implements Iterable<ByteArrayPair> {
         }
 
         indexOs.close();
-    }
-
-    public void deleteFiles() {
-        for (var extension : List.of(DATA_FILE_EXTENSION, INDEX_FILE_EXTENSION, BLOOM_FILE_EXTENSION))
-            new File(filename + extension).delete();
     }
 
     private static class SSTableIterator implements Iterator<ByteArrayPair> {
