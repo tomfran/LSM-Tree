@@ -7,40 +7,43 @@ import java.util.concurrent.TimeUnit;
 
 import static com.tomfran.lsm.TestUtils.getRandomByteArray;
 
-@OutputTimeUnit(TimeUnit.NANOSECONDS)
-@State(Scope.Benchmark)
+@OutputTimeUnit(TimeUnit.SECONDS)
 public class BloomFilterBenchmark {
 
-    BloomFilter bf;
+    @Benchmark
+    public void add(BloomState s) {
+        s.f.add(s.keys[s.index]);
 
-    byte[][] keys;
-
-    int N = 1000000;
-    int index = 0;
-
-    @Setup
-    public void setup() {
-
-        bf = new BloomFilter(N, 0.01);
-
-        keys = new byte[N][];
-
-        for (int i = 0; i < N; i++)
-            keys[i] = getRandomByteArray();
+        s.index = (s.index + 1) % BloomState.N;
     }
 
     @Benchmark
-    public void add() {
-        bf.add(keys[index]);
+    public void contains(BloomState s, Blackhole bh) {
+        bh.consume(s.f.mightContain(s.keys[s.index]));
 
-        index = (index + 1) % N;
+        s.index = (s.index + 1) % BloomState.N;
     }
 
-    @Benchmark
-    public void contains(Blackhole bh) {
-        bh.consume(bf.mightContain(keys[index]));
+    @State(Scope.Thread)
+    public static class BloomState {
 
-        index = (index + 1) % N;
+        static final int N = 1000000;
+
+        BloomFilter f;
+        byte[][] keys = new byte[N][];
+        int index;
+
+        @Setup
+        public void setup() {
+            f = new BloomFilter(N);
+            index = 0;
+            for (int i = 0; i < N; i++)
+                keys[i] = getRandomByteArray();
+
+            for (int i = 0; i < N / 2; i++)
+                f.add(keys[i]);
+        }
+
     }
 
 }

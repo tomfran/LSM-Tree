@@ -25,11 +25,11 @@ tasks.test {
 }
 
 jmh {
-    includes = ['LSMTreeBenchmark.*']
+    includes = ["LSMTreeAddBenchmark.*"]
     fork = 1
     warmupIterations = 0
     iterations = 1
-    benchmarkMode = ['avgt']
+    benchmarkMode = ['thrpt']
     jmhTimeout = '15s'
     jmhVersion = '1.37'
     resultFormat = 'JSON'

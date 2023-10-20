@@ -14,97 +14,92 @@ import java.util.Collections;
 import java.util.concurrent.TimeUnit;
 
 import static com.tomfran.lsm.TestUtils.getRandomPair;
+import static com.tomfran.lsm.utils.BenchmarkUtils.deleteDir;
 
-@OutputTimeUnit(TimeUnit.NANOSECONDS)
+@OutputTimeUnit(TimeUnit.SECONDS)
 @State(Scope.Benchmark)
 public class SSTableBenchmark {
 
-    static final Path DIR = Path.of("sst_benchmark");
-    static final int NUM_ITEMS = 100000;
-    static final int SAMPLE_SIZE = NUM_ITEMS / 1000;
-
-    static ByteArrayPair[] insertedArray;
-    static ByteArrayPair[] skippedArray;
-    static SSTable sstable;
-
-    static int index = 0;
-
-    @Setup
-    public void setup() throws IOException {
-        // setup directory
-        if (Files.exists(DIR))
-            deleteDir();
-
-        Files.createDirectory(DIR);
-
-        // generate random items
-        var l = new ObjectOpenHashSet<ByteArrayPair>();
-        for (int i = 0; i < NUM_ITEMS * 2; i++) {
-            l.add(getRandomPair());
-        }
-
-        // sort and divide into inserted and skipped
-        var items = l.stream()
-                     .sorted((a, b) -> ByteArrayComparator.compare(a.key(), b.key()))
-                     .toList();
-
-        var inserted = new ObjectArrayList<ByteArrayPair>();
-        var skipped = new ObjectArrayList<ByteArrayPair>();
-
-        for (int i = 0; i < items.size(); i++) {
-            var e = items.get(i);
-            if (i % 2 == 0)
-                inserted.add(e);
-            else
-                skipped.add(e);
-        }
-
-        sstable = new SSTable(DIR + "/sst", inserted.iterator(), SAMPLE_SIZE);
-
-        // shuffle to avoid sequential access
-        Collections.shuffle(inserted);
-        Collections.shuffle(skipped);
-        insertedArray = inserted.toArray(ByteArrayPair[]::new);
-        skippedArray = skipped.toArray(ByteArrayPair[]::new);
-    }
-
-    @TearDown
-    public void teardown() throws IOException {
-        sstable.close();
-        deleteDir();
-    }
-
-    private void deleteDir() throws IOException {
-        try (var files = Files.list(DIR)) {
-            files.forEach(f -> {
-                try {
-                    Files.delete(f);
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-            });
-        }
-        Files.delete(DIR);
-    }
 
     @Benchmark
-    public void randomAccess(Blackhole bh) {
-        var item = insertedArray[index];
-        var it = sstable.get(item.key());
+    public void randomAccess(TableState s, Blackhole bh) {
+        var item = s.insertedArray[s.index];
+        var it = s.sstable.get(item.key());
 
         bh.consume(it);
 
-        index = (index + 1) % insertedArray.length;
+        s.index = (s.index + 1) % s.insertedArray.length;
     }
 
     @Benchmark
-    public void negativeAccess(Blackhole bh) {
-        var item = skippedArray[index];
-        var it = sstable.get(item.key());
+    public void negativeAccess(TableState s, Blackhole bh) {
+        var item = s.skippedArray[s.index];
+        var it = s.sstable.get(item.key());
 
         bh.consume(it);
 
-        index = (index + 1) % skippedArray.length;
+        s.index = (s.index + 1) % s.skippedArray.length;
+    }
+
+    @State(Scope.Thread)
+    public static class TableState {
+
+        final int NUM_ITEMS = 100000;
+        final int SAMPLE_SIZE = 1000;
+
+        ByteArrayPair[] insertedArray;
+        ByteArrayPair[] skippedArray;
+        SSTable sstable;
+        Path dir = Path.of("sst_benchmark_");
+
+        int index = 0;
+
+        @Setup
+        public void setup() throws IOException {
+            // setup directory
+            dir = Path.of(dir.toString() + System.currentTimeMillis());
+
+            if (Files.exists(dir))
+                deleteDir(dir);
+
+            Files.createDirectory(dir);
+
+            // generate random items
+            var l = new ObjectOpenHashSet<ByteArrayPair>();
+            for (int i = 0; i < NUM_ITEMS * 2; i++) {
+                l.add(getRandomPair());
+            }
+
+            // sort and divide into inserted and skipped
+            var items = l.stream()
+                         .sorted((a, b) -> ByteArrayComparator.compare(a.key(), b.key()))
+                         .toList();
+
+            var inserted = new ObjectArrayList<ByteArrayPair>();
+            var skipped = new ObjectArrayList<ByteArrayPair>();
+
+            for (int i = 0; i < items.size(); i++) {
+                var e = items.get(i);
+                if (i % 2 == 0)
+                    inserted.add(e);
+                else
+                    skipped.add(e);
+            }
+
+            sstable = new SSTable(dir + "/sst", inserted.iterator(), SAMPLE_SIZE);
+
+            Collections.shuffle(inserted);
+            Collections.shuffle(skipped);
+            insertedArray = inserted.toArray(ByteArrayPair[]::new);
+            skippedArray = skipped.toArray(ByteArrayPair[]::new);
+        }
+
+        @TearDown
+        public void teardown() throws IOException {
+            sstable.close();
+            deleteDir(dir);
+        }
+
     }
 
 }

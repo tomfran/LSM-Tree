@@ -9,63 +9,65 @@ import java.util.concurrent.TimeUnit;
 
 import static com.tomfran.lsm.TestUtils.getRandomPair;
 
-@OutputTimeUnit(TimeUnit.NANOSECONDS)
-@State(Scope.Benchmark)
+@OutputTimeUnit(TimeUnit.SECONDS)
 public class SkipListBenchmark {
 
-    SkipList l;
-    ByteArrayPair[] items;
+    @Benchmark
+    public void addRemove(ListState s, Blackhole bh) {
+        var key = s.items[s.index].key();
 
-    int NUM_ITEMS = 200000;
-    int index = 0;
-
-    boolean[] addRemove;
-
-    @Setup
-    public void setup() {
-
-        l = new SkipList(NUM_ITEMS / 2);
-
-        // generate random items and insert half
-        ObjectArrayList<ByteArrayPair> tmp = new ObjectArrayList<>();
-        for (int i = 0; i < NUM_ITEMS; i++) {
-            var it = getRandomPair();
-            if (i < NUM_ITEMS / 2)
-                l.add(it);
-
-            tmp.add(it);
+        if (s.addRemove[s.index]) {
+            s.l.add(s.items[s.index]);
+        } else {
+            s.l.remove(key);
         }
 
-        items = tmp.toArray(new ByteArrayPair[0]);
-
-        // generate sequence of add/remove operations
-        addRemove = new boolean[NUM_ITEMS];
-        for (int i = 0; i < NUM_ITEMS; i++) {
-            addRemove[i] = Math.random() < 0.5;
-        }
+        s.index = (s.index + 1) % ListState.N;
     }
 
     @Benchmark
-    public void get(Blackhole bh) {
-        var key = items[index].key();
-        var found = l.get(key);
+    public void get(ListState s, Blackhole bh) {
+        var key = s.items[s.index].key();
+        var found = s.l.get(key);
 
         bh.consume(found);
 
-        index = (index + 1) % NUM_ITEMS;
+        s.index = (s.index + 1) % ListState.N;
     }
 
-    @Benchmark
-    public void addRemove(Blackhole bh) {
-        var key = items[index].key();
+    @State(Scope.Thread)
+    public static class ListState {
 
-        if (addRemove[index]) {
-            l.add(items[index]);
-        } else {
-            l.remove(key);
+        static final int N = 200000;
+
+        SkipList l;
+        ByteArrayPair[] items;
+        int index;
+        boolean[] addRemove;
+
+        @Setup
+        public void setup() {
+            l = new SkipList(N / 2);
+
+            ObjectArrayList<ByteArrayPair> tmp = new ObjectArrayList<>();
+            for (int i = 0; i < N; i++) {
+                var it = getRandomPair();
+                if (i < N / 2)
+                    l.add(it);
+
+                tmp.add(it);
+            }
+
+            items = tmp.toArray(new ByteArrayPair[0]);
+
+            index = 0;
+
+            addRemove = new boolean[N];
+            for (int i = 0; i < N; i++) {
+                addRemove[i] = Math.random() < 0.5;
+            }
         }
 
-        index = (index + 1) % NUM_ITEMS;
     }
 
 }

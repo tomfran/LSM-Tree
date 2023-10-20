@@ -12,10 +12,9 @@ import static com.tomfran.lsm.comparator.ByteArrayComparator.compare;
 
 class LSMTreeTest {
 
-    final int maxSize = 10, levelSize = 15;
-
     @TempDir
     static Path tempDirectory;
+    final int maxSize = 10, levelSize = 15;
 
     @Test
     public void writeFlush() throws InterruptedException {

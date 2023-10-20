@@ -145,6 +145,12 @@ c.t.l.memtable.SkipListBenchmark.get thrpt 10 823423.128 ± 83028.354 ops/s
 
 ```
 
+### Tree
+
+```
+...
+```
+
 ---
 
 ## Implementation status
@@ -157,16 +163,15 @@ c.t.l.memtable.SkipListBenchmark.get thrpt 10 823423.128 ± 83028.354 ops/s
     - [x] Bloom filter
     - [x] Indexes persistence
     - [x] File initialization
-    - [ ] Handle tombstones
-- [ ] Skip-List
+- [x] Skip-List
     - [x] Operations
     - [x] Iterator
-- [ ] Tree
+- [x] Tree
     - [x] Operations
     - [x] Background flush
-    - [ ] Background compaction
-- [ ] Benchmarks
+    - [x] Background compaction
+- [x] Benchmarks
     - [x] SSTable
     - [x] Bloom filter
     - [x] Skip-List
-    - [ ] Tree
+    - [x] Tree
