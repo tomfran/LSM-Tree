@@ -10,7 +10,7 @@ import static java.lang.Math.ceil;
 import static java.lang.Math.log;
 
 /**
- * A skip list implementation of items.
+ * A skip list implementation of ByteArrayPairs.
  */
 public class SkipList implements Iterable<ByteArrayPair> {
 

@@ -6,11 +6,20 @@ import it.unimi.dsi.fastutil.io.FastBufferedInputStream;
 import java.io.FileInputStream;
 import java.io.IOException;
 
-public class BaseInputStream {
+/**
+ * This class use a FastBufferedInputStream as a base and adds
+ * utility methods to it, mainly for reading variable-byte encoded longs and integers.
+ */
+public class ExtendedInputStream {
 
     private final FastBufferedInputStream fis;
 
-    public BaseInputStream(String filename) {
+    /**
+     * Initialize an input stream on a file.
+     *
+     * @param filename the file filename.
+     */
+    public ExtendedInputStream(String filename) {
         try {
             fis = new FastBufferedInputStream(new FileInputStream(filename));
             fis.position(0);
@@ -19,10 +28,27 @@ public class BaseInputStream {
         }
     }
 
+    /**
+     * Read a variable byte int from the stream, see readVByteLong()
+     *
+     * @return the next V-Byte int.
+     */
     public int readVByteInt() {
         return (int) readVByteLong();
     }
 
+    /**
+     * Read a variable byte long from the stream.
+     * <p>
+     * A variable byte long is written as:
+     * <tt>|continuation bit| 7-bits payload|</tt>
+     * <p>
+     * For instance the number 10101110101010110 is represented using 24 bits as follows:
+     * <p>
+     * |1|1010110|1|0000101|0|0111010|
+     *
+     * @return the next V-Byte long.
+     */
     public long readVByteLong() {
         long result = 0;
         int b;
@@ -39,6 +65,11 @@ public class BaseInputStream {
         return result - 1;
     }
 
+    /**
+     * Read 8 bytes representing a long.
+     *
+     * @return the next long in the stream.
+     */
     public long readLong() {
         try {
             long result = 0;
@@ -52,6 +83,11 @@ public class BaseInputStream {
         }
     }
 
+    /**
+     * Read a single byte as an int.
+     *
+     * @return the next 8-bits integer in the stream.
+     */
     public int readByteInt() {
         try {
             return fis.read();
@@ -60,6 +96,12 @@ public class BaseInputStream {
         }
     }
 
+    /**
+     * Read N bytes.
+     *
+     * @param n the wanted number of bytes.
+     * @return an array with the next N bytes.
+     */
     public byte[] readNBytes(int n) {
         try {
             return fis.readNBytes(n);
@@ -68,6 +110,13 @@ public class BaseInputStream {
         }
     }
 
+    /**
+     * Read a ByteArrayPair from the stream.
+     * <p>
+     * Each array is encoded as length, payload.
+     *
+     * @return the next item in the stream.
+     */
     public ByteArrayPair readBytePair() {
         try {
             int keyLength = readVByteInt();
@@ -82,6 +131,12 @@ public class BaseInputStream {
         }
     }
 
+    /**
+     * Skip N bytes from the stream.
+     *
+     * @param n the number of bytes to skip.
+     * @return the number of bytes skipped.
+     */
     public long skip(int n) {
         try {
             return fis.skip(n);
@@ -90,6 +145,11 @@ public class BaseInputStream {
         }
     }
 
+    /**
+     * Position the stream at the wanted offset.
+     *
+     * @param offset the offset to place the stream to.
+     */
     public void seek(long offset) {
         try {
             fis.position(offset);
@@ -98,6 +158,9 @@ public class BaseInputStream {
         }
     }
 
+    /**
+     * Close resources.
+     */
     public void close() {
         try {
             fis.close();

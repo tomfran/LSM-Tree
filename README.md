@@ -6,8 +6,11 @@ An implementation of the Log-Structured Merge Tree (LSM tree) data structure in 
 
 1. [Sorted String Table](#SSTable)
 2. [Skip-List](#Skip-List)
-3. [Benchmarks](#Benchmarks)
-4. [Implementation status](#Implementation-status)
+3. [Tree](#Tree)
+4. [Benchmarks](#Benchmarks)
+5. [Implementation status](#Implementation-status)
+
+To interact with a toy tree you can use `./gradlew run`
 
 ---
 
@@ -89,8 +92,6 @@ use higher levels to skip unwanted nodes.
 Given `n` elements, a skip list has `log(n)` levels, the first level containing all the elements.
 By increasing the level, the number of elements is cut roughly by half.
 
-![readme_imgs/skip-list.png](misc/skip-list.png)
-
 To locate an element, we start from the top level and move forward until we find an element greater than the one
 we are looking for. Then we move down to the next level and repeat the process until we find the element.
 
@@ -99,10 +100,34 @@ the operation on the node. All of them have an average time complexity of `O(log
 
 ---
 
+## Tree
+
+...
+
+### Components
+
+...
+
+### Insertion
+
+...
+
+### Lookup
+
+...
+
+### Write-ahead logging
+
+...
+
+---
+
 ## Benchmarks
 
 I am using [JMH](https://openjdk.java.net/projects/code-tools/jmh/) to run benchmarks,
-the results are obtained on a MacBook Pro (16-inch, 2021) with an M1 Pro processor and 16 GB of RAM.
+the results are obtained on AMD Ryzen™ 5 4600H with 16GB of RAM and 512GB SSD.
+
+> Take those with a grain of salt, development is still in progress.
 
 To run them use `./gradlew jmh`.
 
@@ -113,9 +138,9 @@ To run them use `./gradlew jmh`.
 
 ```
 
-Benchmark Mode Cnt Score Error Units
-c.t.l.sstable.SSTableBenchmark.negativeAccess thrpt 10 3541989.316 ± 78933.780 ops/s
-c.t.l.sstable.SSTableBenchmark.randomAccess thrpt 10 56157.613 ± 264.314 ops/s
+Benchmark                                       Mode  Cnt        Score        Error  Units
+c.t.l.sstable.SSTableBenchmark.negativeAccess  thrpt    5  3316202.976 ±  32851.546  ops/s
+c.t.l.sstable.SSTableBenchmark.randomAccess    thrpt    5     7989.945 ±     40.689  ops/s
 
 ```
 
@@ -125,10 +150,9 @@ c.t.l.sstable.SSTableBenchmark.randomAccess thrpt 10 56157.613 ± 264.314 ops/s
 - Contains: test whether the keys are present in the Bloom filter.
 
 ```
-
-Benchmark Mode Cnt Score Error Units
-c.t.l.bloom.BloomFilterBenchmark.add thrpt 10 9777191.526 ± 168208.916 ops/s
-c.t.l.bloom.BloomFilterBenchmark.contains thrpt 10 10724196.205 ± 20411.741 ops/s
+Benchmark                                       Mode  Cnt        Score        Error  Units
+c.t.l.bloom.BloomFilterBenchmark.add           thrpt    5  3190753.307 ±  74744.764  ops/s
+c.t.l.bloom.BloomFilterBenchmark.contains      thrpt    5  3567392.634 ± 220377.613  ops/s
 
 ```
 
@@ -139,16 +163,22 @@ c.t.l.bloom.BloomFilterBenchmark.contains thrpt 10 10724196.205 ± 20411.741 ops
 
 ```
 
-Benchmark Mode Cnt Score Error Units
-c.t.l.memtable.SkipListBenchmark.addRemove thrpt 10 684885.546 ± 21793.787 ops/s
-c.t.l.memtable.SkipListBenchmark.get thrpt 10 823423.128 ± 83028.354 ops/s
+Benchmark                                       Mode  Cnt        Score        Error  Units
+c.t.l.memtable.SkipListBenchmark.addRemove     thrpt    5   430239.471 ±   4825.990  ops/s
+c.t.l.memtable.SkipListBenchmark.get           thrpt    5   487265.620 ±   8201.227  ops/s
 
 ```
 
 ### Tree
 
+- Get: get elements from a tree with 1M keys;
+- Add: add 1M distinct elements to a tree with a memtable size of 2^18
+
 ```
-...
+Benchmark                                       Mode  Cnt        Score        Error  Units
+c.t.l.tree.LSMTreeAddBenchmark.add             thrpt    5   540788.751 ±  54491.134  ops/s
+c.t.l.tree.LSMTreeGetBenchmark.get             thrpt    5     9426.951 ±    241.190  ops/s
+
 ```
 
 ---
@@ -170,6 +200,7 @@ c.t.l.memtable.SkipListBenchmark.get thrpt 10 823423.128 ± 83028.354 ops/s
     - [x] Operations
     - [x] Background flush
     - [x] Background compaction
+    - [ ] Write ahead log
 - [x] Benchmarks
     - [x] SSTable
     - [x] Bloom filter

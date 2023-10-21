@@ -8,7 +8,7 @@ import java.nio.file.Path;
 import java.util.Random;
 import java.util.stream.Stream;
 
-public class BaseStreamsTest {
+public class ExtendedStreamsTest {
 
     @TempDir
     static Path tempDirectory;
@@ -18,7 +18,7 @@ public class BaseStreamsTest {
     @Test
     public void shouldReadWrite() {
 
-        var os = new BaseOutputStream(tempDirectory + "stream");
+        var os = new ExtendedOutputStream(tempDirectory + "stream");
 
         var intList = Stream.generate(rn::nextInt).map(Math::abs).limit(1000).toList();
         intList.forEach(os::writeVByteInt);
@@ -27,11 +27,11 @@ public class BaseStreamsTest {
         longList.forEach(os::writeVByteLong);
 
         var pairList = Stream.generate(TestUtils::getRandomPair).limit(1000).toList();
-        pairList.forEach(os::writeBytePair);
+        pairList.forEach(os::writeByteArrayPair);
 
         os.close();
 
-        var is = new BaseInputStream(tempDirectory + "stream");
+        var is = new ExtendedInputStream(tempDirectory + "stream");
 
         intList.forEach(i -> {
             var read = is.readVByteInt();

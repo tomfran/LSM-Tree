@@ -1,8 +1,8 @@
 package com.tomfran.lsm.bloom;
 
 
-import com.tomfran.lsm.io.BaseInputStream;
-import com.tomfran.lsm.io.BaseOutputStream;
+import com.tomfran.lsm.io.ExtendedInputStream;
+import com.tomfran.lsm.io.ExtendedOutputStream;
 import it.unimi.dsi.fastutil.longs.LongLongMutablePair;
 import it.unimi.dsi.fastutil.longs.LongLongPair;
 import org.apache.commons.codec.digest.MurmurHash3;
@@ -78,7 +78,7 @@ public class BloomFilter {
      * @return The Bloom filter.
      */
     public static BloomFilter readFromFile(String filename) {
-        BaseInputStream is = new BaseInputStream(filename);
+        ExtendedInputStream is = new ExtendedInputStream(filename);
         try {
             int size = is.readVByteInt();
             int hashCount = is.readVByteInt();
@@ -140,7 +140,7 @@ public class BloomFilter {
      * @param filename The file to write to.
      */
     public void writeToFile(String filename) {
-        BaseOutputStream os = new BaseOutputStream(filename);
+        ExtendedOutputStream os = new ExtendedOutputStream(filename);
 
         os.writeVByteInt(size);
         os.writeVByteInt(hashCount);

@@ -9,6 +9,8 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.util.concurrent.TimeUnit;
 
+import static com.tomfran.lsm.utils.BenchmarkUtils.shuffleItems;
+
 @OutputTimeUnit(TimeUnit.SECONDS)
 @State(Scope.Benchmark)
 public class LSMTreeGetBenchmark {
@@ -23,12 +25,13 @@ public class LSMTreeGetBenchmark {
     ByteArrayPair[] items;
 
     @Setup
-    public void setup() throws IOException, InterruptedException {
+    public void setup() throws IOException {
         tree = BenchmarkUtils.initTree(DIR, MEMTABLE_SIZE, LEVEL_SIZE);
         items = BenchmarkUtils.fillItems(NUM_ITEMS);
         for (var i : items)
             tree.add(i);
-        Thread.sleep(5000);
+
+        shuffleItems(items);
     }
 
     @TearDown

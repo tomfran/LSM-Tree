@@ -12,6 +12,17 @@ import java.util.concurrent.ExecutorService;
 
 import static java.util.concurrent.Executors.newSingleThreadExecutor;
 
+/**
+ * LSM Tree implementation.
+ * <p>
+ * Writes are added to the Memtable, which is flushed when a certain size is reached.
+ * SSTables are divided in levels, each level storing bigger tables.
+ * <p>
+ * When flushed, a Memtable becomes an SSTable at level 1, when the level exceeds
+ * a threshold, all its tables are merged and added to the next level.
+ * <p>
+ * Background executors take care of flushing and compaction.
+ */
 public class LSMTree {
 
     static final int DEFAULT_MEMTABLE_MAX_SIZE = 1 << 10;
@@ -43,8 +54,8 @@ public class LSMTree {
     /**
      * Creates a new LSMTree with a memtable size and data directory.
      *
-     * @param memtableMaxSize The maximum size of the memtable before it is flushed to disk.
-     * @param dataDir         The directory to store the data in.
+     * @param mutableMemtableMaxSize The maximum size of the memtable before it is flushed to disk.
+     * @param dataDir                The directory to store the data in.
      */
     public LSMTree(int mutableMemtableMaxSize, int tableLevelMaxSize, String dataDir) {
         this.mutableMemtableMaxSize = mutableMemtableMaxSize;
@@ -118,6 +129,9 @@ public class LSMTree {
         return null;
     }
 
+    /**
+     * Stop the background threads.
+     */
     public void stop() {
         memtableFlusher.shutdownNow();
         tableCompactor.shutdownNow();

@@ -5,12 +5,21 @@ import it.unimi.dsi.fastutil.io.FastBufferedOutputStream;
 
 import java.io.FileOutputStream;
 
-public class BaseOutputStream {
+/**
+ * This class use a FastBufferedOutputStream as a base and adds
+ * utility methods to it, mainly for writing variable-byte encoded longs and integers.
+ */
+public class ExtendedOutputStream {
 
     private static final byte[] VBYTE_BUFFER = new byte[10];
     private final FastBufferedOutputStream fos;
 
-    public BaseOutputStream(String filename) {
+    /**
+     * Initialize an output stream on a file.
+     *
+     * @param filename the file filename.
+     */
+    public ExtendedOutputStream(String filename) {
         try {
             fos = new FastBufferedOutputStream(new FileOutputStream(filename));
             fos.position(0);
@@ -19,6 +28,12 @@ public class BaseOutputStream {
         }
     }
 
+    /**
+     * Write a byte array to the stream.
+     *
+     * @param bytes array to write.
+     * @return number of written bytes.
+     */
     public int write(byte[] bytes) {
         try {
             fos.write(bytes);
@@ -28,19 +43,45 @@ public class BaseOutputStream {
         }
     }
 
+    /**
+     * Write a variable-byte int to the stream.
+     *
+     * @param n integer to write.
+     * @return number of written bytes.
+     */
     public int writeVByteInt(int n) {
         return write(intToVByte(n));
     }
 
+    /**
+     * Write a variable-byte long to the stream.
+     *
+     * @param n long to write.
+     * @return number of written bytes.
+     */
     public int writeVByteLong(long n) {
         return write(longToVByte(n));
     }
 
+    /**
+     * Write 64 bits to the stream.
+     *
+     * @param n long to write.
+     * @return number of written bytes.
+     */
     public int writeLong(long n) {
         return write(longToBytes(n));
     }
 
-    public int writeBytePair(ByteArrayPair pair) {
+    /**
+     * Write a ByteArrayPair from the stream.
+     * <p>
+     * Each array is encoded as length, payload.
+     *
+     * @param pair item to write.
+     * @return number of written bytes.
+     */
+    public int writeByteArrayPair(ByteArrayPair pair) {
         byte[] key = pair.key(), value = pair.value();
         byte[] keyBytes = intToVByte(key.length), valueBytes = intToVByte(value.length);
 
@@ -54,8 +95,26 @@ public class BaseOutputStream {
         return write(result);
     }
 
+    /**
+     * Convert an int in V-Byte representation.
+     *
+     * @param n int to convert.
+     * @return byte array storing the result.
+     */
     byte[] intToVByte(int n) {
         return longToVByte(n);
+    }
+
+
+    /**
+     * Close resources.
+     */
+    public void close() {
+        try {
+            fos.close();
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
     }
 
     private byte[] longToVByte(long n) {
@@ -77,22 +136,13 @@ public class BaseOutputStream {
         return res;
     }
 
-
-    byte[] longToBytes(long n) {
+    private byte[] longToBytes(long n) {
         byte[] result = new byte[8];
         for (int i = 7; i >= 0; i--) {
             result[i] = (byte) (n & 0xFF);
             n >>>= 8;
         }
         return result;
-    }
-
-    public void close() {
-        try {
-            fos.close();
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
     }
 
 }

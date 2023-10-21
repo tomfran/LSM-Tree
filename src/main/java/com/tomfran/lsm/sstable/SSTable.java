@@ -1,8 +1,8 @@
 package com.tomfran.lsm.sstable;
 
 import com.tomfran.lsm.bloom.BloomFilter;
-import com.tomfran.lsm.io.BaseInputStream;
-import com.tomfran.lsm.io.BaseOutputStream;
+import com.tomfran.lsm.io.ExtendedInputStream;
+import com.tomfran.lsm.io.ExtendedOutputStream;
 import com.tomfran.lsm.types.ByteArrayPair;
 import com.tomfran.lsm.utils.IteratorMerger;
 import com.tomfran.lsm.utils.UniqueSortedIterator;
@@ -25,7 +25,7 @@ public class SSTable implements Iterable<ByteArrayPair> {
     public static final String INDEX_FILE_EXTENSION = ".index";
 
     String filename;
-    BaseInputStream is;
+    ExtendedInputStream is;
     int size;
 
     LongArrayList sparseOffsets;
@@ -43,7 +43,7 @@ public class SSTable implements Iterable<ByteArrayPair> {
     public SSTable(String filename, Iterator<ByteArrayPair> items, int sampleSize) {
         this.filename = filename;
         writeItems(filename, items, sampleSize);
-        is = new BaseInputStream(filename + DATA_FILE_EXTENSION);
+        is = new ExtendedInputStream(filename + DATA_FILE_EXTENSION);
     }
 
     /**
@@ -80,14 +80,14 @@ public class SSTable implements Iterable<ByteArrayPair> {
 
     private void initializeFromDisk(String filename) {
         // items file
-        is = new BaseInputStream(filename + DATA_FILE_EXTENSION);
+        is = new ExtendedInputStream(filename + DATA_FILE_EXTENSION);
 
         // sparse index
         sparseOffsets = new LongArrayList();
         sparseSizeCount = new IntArrayList();
         sparseKeys = new ObjectArrayList<>();
 
-        BaseInputStream indexIs = new BaseInputStream(filename + INDEX_FILE_EXTENSION);
+        ExtendedInputStream indexIs = new ExtendedInputStream(filename + INDEX_FILE_EXTENSION);
         size = indexIs.readVByteInt();
 
         int sparseSize = indexIs.readVByteInt();
@@ -212,7 +212,7 @@ public class SSTable implements Iterable<ByteArrayPair> {
     }
 
     private void writeItems(String filename, Iterator<ByteArrayPair> items, int sampleSize) {
-        BaseOutputStream ios = new BaseOutputStream(filename + DATA_FILE_EXTENSION);
+        ExtendedOutputStream ios = new ExtendedOutputStream(filename + DATA_FILE_EXTENSION);
 
         sparseOffsets = new LongArrayList();
         sparseSizeCount = new IntArrayList();
@@ -231,7 +231,7 @@ public class SSTable implements Iterable<ByteArrayPair> {
             }
             bloomFilter.add(item.key());
 
-            offset += ios.writeBytePair(item);
+            offset += ios.writeByteArrayPair(item);
             size++;
         }
         ios.close();
@@ -245,7 +245,7 @@ public class SSTable implements Iterable<ByteArrayPair> {
         // write bloom filter and index to disk
         bloomFilter.writeToFile(filename + BLOOM_FILE_EXTENSION);
 
-        BaseOutputStream indexOs = new BaseOutputStream(filename + INDEX_FILE_EXTENSION);
+        ExtendedOutputStream indexOs = new ExtendedOutputStream(filename + INDEX_FILE_EXTENSION);
         indexOs.writeVByteInt(size);
 
         int sparseSize = sparseOffsets.size();

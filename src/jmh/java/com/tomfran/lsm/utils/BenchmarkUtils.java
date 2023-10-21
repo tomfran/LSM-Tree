@@ -6,6 +6,7 @@ import com.tomfran.lsm.types.ByteArrayPair;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Random;
 
 import static com.tomfran.lsm.TestUtils.getRandomPair;
 
@@ -25,6 +26,16 @@ public class BenchmarkUtils {
         for (int i = 0; i < n; i++)
             items[i] = getRandomPair();
         return items;
+    }
+
+    public static void shuffleItems(ByteArrayPair[] v) {
+        var rn = new Random();
+        for (int i = 0; i < v.length; i++) {
+            var tmp = v[i];
+            int j = rn.nextInt(i, v.length);
+            v[i] = v[j];
+            v[j] = tmp;
+        }
     }
 
     public static void deleteDir(Path dir) throws IOException {

@@ -18,7 +18,6 @@ public record ByteArrayPair(byte[] key, byte[] value) implements Comparable<Byte
 
     @Override
     public String toString() {
-        // binary representation of key and value, e.g. (1010101, 010101010)
         StringBuilder sb = new StringBuilder();
         sb.append("(");
         for (byte b : key) {
