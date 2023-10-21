@@ -4,17 +4,25 @@ An implementation of the Log-Structured Merge Tree (LSM tree) data structure in 
 
 **Table of Contents**
 
-1. [Sorted String Table](#SSTable)
-2. [Skip-List](#Skip-List)
-3. [Tree](#Tree)
+1. [Architecture](#Architecture)
+    1. [SSTable](#SSTable)
+    2. [Skip-List](#Skip-List)
+    3. [Tree](#Tree)
 4. [Benchmarks](#Benchmarks)
+    1. [SSTable](#sstable-1)
+    2. [Skip-List](#skip-list-1)
+    3. [Tree](#tree-1)
 5. [Implementation status](#Implementation-status)
+
+## Console
 
 To interact with a toy tree you can use `./gradlew run -q` to spawn a console.
 
 ![console.png](misc%2Fconsole.png)
 
 ---
+
+# Architecture
 
 ## SSTable
 
