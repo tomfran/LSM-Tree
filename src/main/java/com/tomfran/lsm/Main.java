@@ -4,64 +4,70 @@ import com.tomfran.lsm.tree.LSMTree;
 import com.tomfran.lsm.types.ByteArrayPair;
 
 import java.io.File;
-import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Scanner;
+import java.util.stream.Stream;
 
 public class Main {
 
     static final String DIRECTORY = "LSM-data";
 
-    public static void main(String[] args) throws IOException {
+    public static void main(String[] args) {
 
         if (new File(DIRECTORY).exists())
             deleteDir();
 
-        LSMTree tree = new LSMTree(3, 2, DIRECTORY);
+        LSMTree tree = new LSMTree(5, 2, DIRECTORY);
 
         Scanner scanner = new Scanner(System.in);
         scanner.useDelimiter("\n");
 
-        System.out.println(
-                """
-                LSM Tree console
+        String intro = """
+                         
+                         |      __|   \\  |           __ __|             \s
+                         |    \\__ \\  |\\/ |   ____|      |   _| -_)   -_)\s
+                        ____| ____/ _|  _|             _| _| \\___| \\___|\s
+                       """;
 
-                Commands:
-                - ins <key> <value> : insert a key-value pair
-                - get <key>         : get a value for a key
-                - del <key>         : delete a key-value pair
-                - exit              : exit the application
+        String help = """
+                      Commands:
+                        - s/set  <key> <value> : insert a key-value pair;
+                        - g/get  <key>         : get a value for a key;
+                        - d/del  <key>         : delete a key-value pair;
+                        - e/exit               : exit the application;
+                        - d/help               : show this list.
+                      """;
 
-                """
-        );
+        System.out.println(intro);
+        System.out.println(help);
 
         boolean exit = false;
 
         while (!exit) {
-            System.out.print("Enter a command: ");
+            System.out.print("> ");
             String command = scanner.nextLine();
 
-            var parts = command.split(" ");
+            String[] parts = command.split(" ");
 
+            String msg;
             switch (parts[0]) {
-                case "exit" -> {
-                    System.out.println("Exiting...");
-                    exit = true;
+                case "s", "set" -> {
+                    tree.add(new ByteArrayPair(parts[1].getBytes(), parts[2].getBytes()));
+                    System.out.println("ok");
                 }
-                case "ins" -> tree.add(new ByteArrayPair(parts[1].getBytes(), parts[2].getBytes()));
-                case "del" -> tree.delete(parts[1].getBytes());
-                case "get" -> {
-                    String key = parts[1];
-                    byte[] value = tree.get(key.getBytes());
-
-                    var msg = (value == null || value.length == 0) ? "No value found for key " + key :
-                            "Value for key " + key + " is " + new String(value);
-                    System.out.println(msg);
+                case "d", "del" -> {
+                    tree.delete(parts[1].getBytes());
+                    System.out.println("ok");
                 }
-                default -> System.out.println("Unknown command: " + command);
+                case "g", "get" -> {
+                    byte[] value = tree.get(parts[1].getBytes());
+                    System.out.println((value == null || value.length == 0) ? "not found" : new String(value));
+                }
+                case "h", "help" -> System.out.println(help);
+                case "e", "exit" -> exit = true;
+                default -> System.out.println("Unknown command");
             }
-            System.out.println();
         }
         tree.stop();
         scanner.close();
@@ -69,17 +75,11 @@ public class Main {
         deleteDir();
     }
 
-    static private void deleteDir() throws IOException {
-        try (var files = Files.list(Path.of(DIRECTORY))) {
-            files.forEach(f -> {
-                try {
-                    Files.delete(f);
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-            });
+    static private void deleteDir() {
+        try (Stream<Path> f = Files.walk(Path.of(DIRECTORY))) {
+            f.map(Path::toFile).forEach(File::delete);
+        } catch (Exception ignored) {
         }
-        Files.delete(Path.of(DIRECTORY));
     }
 
 }

@@ -64,13 +64,11 @@ public class SSTableBenchmark {
 
             Files.createDirectory(dir);
 
-            // generate random items
             var l = new ObjectOpenHashSet<ByteArrayPair>();
             for (int i = 0; i < NUM_ITEMS * 2; i++) {
                 l.add(getRandomPair());
             }
 
-            // sort and divide into inserted and skipped
             var items = l.stream()
                          .sorted((a, b) -> ByteArrayComparator.compare(a.key(), b.key()))
                          .toList();
@@ -95,7 +93,7 @@ public class SSTableBenchmark {
         }
 
         @TearDown
-        public void teardown() throws IOException {
+        public void teardown() {
             sstable.close();
             deleteDir(dir);
         }

@@ -3,6 +3,7 @@ package com.tomfran.lsm.utils;
 import com.tomfran.lsm.tree.LSMTree;
 import com.tomfran.lsm.types.ByteArrayPair;
 
+import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -38,17 +39,11 @@ public class BenchmarkUtils {
         }
     }
 
-    public static void deleteDir(Path dir) throws IOException {
-        try (var files = Files.list(dir)) {
-            files.forEach(f -> {
-                try {
-                    Files.delete(f);
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-            });
+    public static void deleteDir(Path dir) {
+        try (var f = Files.walk(dir)) {
+            f.map(Path::toFile).forEach(File::delete);
+        } catch (Exception ignored) {
         }
-        Files.delete(dir);
     }
 
 }

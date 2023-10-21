@@ -10,7 +10,9 @@ An implementation of the Log-Structured Merge Tree (LSM tree) data structure in 
 4. [Benchmarks](#Benchmarks)
 5. [Implementation status](#Implementation-status)
 
-To interact with a toy tree you can use `./gradlew run`
+To interact with a toy tree you can use `./gradlew run -q` to spawn a console.
+
+![console.png](misc%2Fconsole.png)
 
 ---
 
@@ -122,7 +124,7 @@ the operation on the node. All of them have an average time complexity of `O(log
 
 ---
 
-## Benchmarks
+# Benchmarks
 
 I am using [JMH](https://openjdk.java.net/projects/code-tools/jmh/) to run benchmarks,
 the results are obtained on AMD Ryzen™ 5 4600H with 16GB of RAM and 512GB SSD.
@@ -131,7 +133,7 @@ the results are obtained on AMD Ryzen™ 5 4600H with 16GB of RAM and 512GB SSD.
 
 To run them use `./gradlew jmh`.
 
-### SSTable
+## SSTable
 
 - Negative access: the key is not present in the table, hence the Bloom filter will likely stop the search;
 - Random access: the key is present in the table, the order of the keys is random.
@@ -144,7 +146,7 @@ c.t.l.sstable.SSTableBenchmark.randomAccess    thrpt    5     7989.945 ±     40
 
 ```
 
-### Bloom filter
+## Bloom filter
 
 - Add: add keys to a 1M keys Bloom filter with 0.01 false positive rate;
 - Contains: test whether the keys are present in the Bloom filter.
@@ -156,7 +158,7 @@ c.t.l.bloom.BloomFilterBenchmark.contains      thrpt    5  3567392.634 ± 220377
 
 ```
 
-### Skip-List
+## Skip-List
 
 - Get: get keys from a 100k keys skip-list;
 - Add/Remove: add and remove keys from a 100k keys skip-list.
@@ -169,7 +171,7 @@ c.t.l.memtable.SkipListBenchmark.get           thrpt    5   487265.620 ±   8201
 
 ```
 
-### Tree
+## Tree
 
 - Get: get elements from a tree with 1M keys;
 - Add: add 1M distinct elements to a tree with a memtable size of 2^18
