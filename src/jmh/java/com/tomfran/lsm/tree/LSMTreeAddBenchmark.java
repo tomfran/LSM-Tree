@@ -28,7 +28,7 @@ public class LSMTreeAddBenchmark {
     }
 
     @TearDown
-    public void teardown() throws IOException, InterruptedException {
+    public void teardown() throws InterruptedException {
         tree.stop();
         Thread.sleep(5000);
         BenchmarkUtils.deleteDir(DIR);

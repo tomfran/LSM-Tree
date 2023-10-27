@@ -132,7 +132,7 @@ public class LSMTree {
     /**
      * Stop the background threads.
      */
-    public void stop() {
+    public void stop() throws InterruptedException {
         memtableFlusher.shutdownNow();
         tableCompactor.shutdownNow();
     }

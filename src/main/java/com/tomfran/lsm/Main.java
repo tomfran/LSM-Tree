@@ -13,7 +13,7 @@ public class Main {
 
     static final String DIRECTORY = "LSM-data";
 
-    public static void main(String[] args) {
+    public static void main(String[] args) throws InterruptedException {
 
         if (new File(DIRECTORY).exists())
             deleteDir();
@@ -48,25 +48,28 @@ public class Main {
             System.out.print("> ");
             String command = scanner.nextLine();
 
-            String[] parts = command.split(" ");
+            try {
+                String[] parts = command.split(" ");
 
-            String msg;
-            switch (parts[0]) {
-                case "s", "set" -> {
-                    tree.add(new ByteArrayPair(parts[1].getBytes(), parts[2].getBytes()));
-                    System.out.println("ok");
+                switch (parts[0]) {
+                    case "s", "set" -> {
+                        tree.add(new ByteArrayPair(parts[1].getBytes(), parts[2].getBytes()));
+                        System.out.println("ok");
+                    }
+                    case "d", "del" -> {
+                        tree.delete(parts[1].getBytes());
+                        System.out.println("ok");
+                    }
+                    case "g", "get" -> {
+                        byte[] value = tree.get(parts[1].getBytes());
+                        System.out.println((value == null || value.length == 0) ? "not found" : new String(value));
+                    }
+                    case "h", "help" -> System.out.println(help);
+                    case "e", "exit" -> exit = true;
+                    default -> System.out.println("Unknown command");
                 }
-                case "d", "del" -> {
-                    tree.delete(parts[1].getBytes());
-                    System.out.println("ok");
-                }
-                case "g", "get" -> {
-                    byte[] value = tree.get(parts[1].getBytes());
-                    System.out.println((value == null || value.length == 0) ? "not found" : new String(value));
-                }
-                case "h", "help" -> System.out.println(help);
-                case "e", "exit" -> exit = true;
-                default -> System.out.println("Unknown command");
+            } catch (Exception e) {
+                System.out.printf("### error while executing command: \"%s\"\n", command);
             }
         }
         tree.stop();

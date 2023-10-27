@@ -4,7 +4,6 @@ import com.tomfran.lsm.tree.LSMTree;
 import com.tomfran.lsm.types.ByteArrayPair;
 
 import java.io.File;
-import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Random;
@@ -13,7 +12,7 @@ import static com.tomfran.lsm.TestUtils.getRandomPair;
 
 public class BenchmarkUtils {
 
-    public static LSMTree initTree(Path dir, int memSize, int levelSize) throws IOException {
+    public static LSMTree initTree(Path dir, int memSize, int levelSize) {
         // setup directory
         if (Files.exists(dir))
             deleteDir(dir);
