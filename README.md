@@ -1,14 +1,15 @@
 # LSM tree
 
 An implementation of the Log-Structured Merge Tree (LSM tree) data structure in Java.
+Here you can find a [Medium article](https://medium.com/@tomfran/log-structured-merge-tree-a79241c959e3) about this project.
 
 **Table of Contents**
 
-1. [Architecture](#Architecture)
-    1. [SSTable](#SSTable)
-    2. [Skip-List](#Skip-List)
-    3. [Tree](#Tree)
-4. [Benchmarks](#Benchmarks)
+1. [Architecture](#architecture)
+    1. [SSTable](#sstable)
+    2. [Skip-List](#skip-list)
+    3. [Tree](#tree)
+4. [Benchmarks](#benchmarks)
     1. [SSTable](#sstable-1)
     2. [Skip-List](#skip-list-1)
     3. [Tree](#tree-1)
@@ -228,4 +229,4 @@ I don't have the practical time to do all of this, perhaps the first two points 
 - [A Skip List Cookbook](https://api.drum.lib.umd.edu/server/api/core/bitstreams/17176ef8-8330-4a6c-8b75-4cd18c570bec/content)
   by William Pugh.
 
-_If you found this useful or interesting do not hesitate to ask clarifying questions or get in touch!_ 
+_If you found this useful or interesting do not hesitate to ask clarifying questions or get in touch!_
