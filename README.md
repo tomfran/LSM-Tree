@@ -1,6 +1,7 @@
 # LSM tree
 
 An implementation of the Log-Structured Merge Tree (LSM tree) data structure in Java.
+
 Here you can find a [Medium article](https://medium.com/@tomfran/log-structured-merge-tree-a79241c959e3) about this project.
 
 **Table of Contents**
