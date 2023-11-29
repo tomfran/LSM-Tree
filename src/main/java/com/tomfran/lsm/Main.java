@@ -36,7 +36,7 @@ public class Main {
                         - g/get  <key>         : get a key value;
                         - d/del  <key>         : delete a key;
                         - e/exit               : stop the console;
-                        - d/help               : show this message.
+                        - h/help               : show this message.
                       """;
 
         System.out.println(intro);
