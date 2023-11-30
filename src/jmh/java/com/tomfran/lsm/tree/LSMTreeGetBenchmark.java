@@ -5,7 +5,6 @@ import com.tomfran.lsm.utils.BenchmarkUtils;
 import org.openjdk.jmh.annotations.*;
 import org.openjdk.jmh.infra.Blackhole;
 
-import java.io.IOException;
 import java.nio.file.Path;
 import java.util.concurrent.TimeUnit;
 
@@ -15,7 +14,7 @@ import static com.tomfran.lsm.utils.BenchmarkUtils.shuffleItems;
 @State(Scope.Benchmark)
 public class LSMTreeGetBenchmark {
 
-    static final Path DIR = Path.of("tree_benchmark");
+    static final Path DIR = Path.of("tree_get_benchmark");
     static final int NUM_ITEMS = 1000000;
     static final int MEMTABLE_SIZE = 1 << 18;
     static final int LEVEL_SIZE = 5;
@@ -25,7 +24,7 @@ public class LSMTreeGetBenchmark {
     ByteArrayPair[] items;
 
     @Setup
-    public void setup() throws IOException {
+    public void setup() {
         tree = BenchmarkUtils.initTree(DIR, MEMTABLE_SIZE, LEVEL_SIZE);
         items = BenchmarkUtils.fillItems(NUM_ITEMS);
         for (var i : items)
@@ -35,10 +34,8 @@ public class LSMTreeGetBenchmark {
     }
 
     @TearDown
-    public void teardown() throws InterruptedException {
-        tree.stop();
-        Thread.sleep(5000);
-        BenchmarkUtils.deleteDir(DIR);
+    public void teardown() {
+        BenchmarkUtils.stopTreeAndCleanDisk(tree, DIR);
     }
 
     @Benchmark

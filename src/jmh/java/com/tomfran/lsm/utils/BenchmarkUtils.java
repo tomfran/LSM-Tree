@@ -13,12 +13,20 @@ import static com.tomfran.lsm.TestUtils.getRandomPair;
 public class BenchmarkUtils {
 
     public static LSMTree initTree(Path dir, int memSize, int levelSize) {
-        // setup directory
         if (Files.exists(dir))
             deleteDir(dir);
 
-        // setup tree
         return new LSMTree(memSize, levelSize, dir.toString());
+    }
+
+    public static void stopTreeAndCleanDisk(LSMTree tree, Path dir) {
+        try {
+            tree.stop();
+            Thread.sleep(5000);
+        } catch (Exception ignored) {
+        }
+
+        deleteDir(dir);
     }
 
     public static ByteArrayPair[] fillItems(int n) {
@@ -39,8 +47,11 @@ public class BenchmarkUtils {
     }
 
     public static void deleteDir(Path dir) {
-        try (var f = Files.walk(dir)) {
-            f.map(Path::toFile).forEach(File::delete);
+        try {
+            try (var f = Files.walk(dir)) {
+                f.map(Path::toFile).forEach(File::delete);
+            }
+            Files.delete(dir);
         } catch (Exception ignored) {
         }
     }
