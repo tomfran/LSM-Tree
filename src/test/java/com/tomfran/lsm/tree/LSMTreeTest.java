@@ -25,7 +25,7 @@ class LSMTreeTest {
         Thread.sleep(500);
 
         assert tree.mutableMemtable.byteSize() >= 1 : "mutable memtable size is " + tree.mutableMemtable.byteSize();
-        assert !tree.tables.get(0).isEmpty() : "table is null";
+        assert !tree.levels.get(0).isEmpty() : "table is null";
 
         tree.stop();
     }

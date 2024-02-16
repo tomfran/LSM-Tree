@@ -19,7 +19,6 @@ class UniqueSortedIteratorTest {
         assert res.size() == 10;
         for (int i = 0; i < 10; i++)
             assert res.get(i) == i;
-
     }
 
     private static class DummyIterator implements Iterator<Integer> {

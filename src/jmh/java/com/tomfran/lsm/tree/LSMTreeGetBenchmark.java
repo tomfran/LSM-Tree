@@ -16,8 +16,8 @@ public class LSMTreeGetBenchmark {
 
     static final Path DIR = Path.of("tree_get_benchmark");
     static final int NUM_ITEMS = 1000000;
-    static final int MEMTABLE_SIZE = 1 << 18;
-    static final int LEVEL_SIZE = 5;
+    static final int MEMTABLE_SIZE = 1024 * 1024 * 256;
+    static final int LEVEL_SIZE = 4;
     static int index = 0;
 
     LSMTree tree;

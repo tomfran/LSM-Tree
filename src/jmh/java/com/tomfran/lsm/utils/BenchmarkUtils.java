@@ -12,11 +12,11 @@ import static com.tomfran.lsm.TestUtils.getRandomPair;
 
 public class BenchmarkUtils {
 
-    public static LSMTree initTree(Path dir, int memSize, int levelSize) {
+    public static LSMTree initTree(Path dir, int memSize, int immutableSize) {
         if (Files.exists(dir))
             deleteDir(dir);
 
-        return new LSMTree(memSize, levelSize, dir.toString());
+        return new LSMTree(memSize, immutableSize, dir.toString());
     }
 
     public static void stopTreeAndCleanDisk(LSMTree tree, Path dir) {

@@ -19,7 +19,7 @@ public class SSTableMergeTest {
     static final String MERGE_FILE = "/merge", TABLE_FILE2 = "/test2";
     @TempDir
     static Path tempDirectory;
-    static SSTable merge, second;
+    static SSTable merge, first, second;
     static List<ByteArrayPair> firstItems, secondItems, expectedItems;
 
     @BeforeAll
@@ -39,16 +39,17 @@ public class SSTableMergeTest {
         expectedItems.addAll(firstItems);
         secondItems.stream().skip(n / 2).forEach(expectedItems::add);
 
-        var first = new Memtable();
-        firstItems.forEach(first::add);
-        second = new SSTable(tempDirectory + TABLE_FILE2, secondItems.iterator(), 100);
 
-        merge = SSTable.merge(tempDirectory + MERGE_FILE, 100, first, second);
+        first = new SSTable(tempDirectory.toString(), firstItems.iterator(), 100);
+        second = new SSTable(tempDirectory.toString(), secondItems.iterator(), 100);
+
+        merge = SSTable.sortedRun(tempDirectory.toString(), 1024 * 1024 * 1024, first, second).get(0);
     }
 
     @AfterAll
     public static void teardown() {
         merge.close();
+        first.close();
         second.close();
     }
 

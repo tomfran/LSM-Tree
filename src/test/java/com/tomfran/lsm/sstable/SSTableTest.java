@@ -16,7 +16,6 @@ import static com.tomfran.lsm.comparator.ByteArrayComparator.compare;
 
 class SSTableTest {
 
-    static final String TEST_FILE = "/sstable";
     static final int NUM_ITEMS = 10;
     static final int SAMPLE_SIZE = NUM_ITEMS / 3;
 
@@ -37,8 +36,8 @@ class SSTableTest {
 
         // sort and divide into inserted and skipped
         var items = l.stream()
-                     .sorted((a, b) -> ByteArrayComparator.compare(a.key(), b.key()))
-                     .toList();
+                .sorted((a, b) -> ByteArrayComparator.compare(a.key(), b.key()))
+                .toList();
 
         inserted = new ObjectArrayList<>();
         skipped = new ObjectArrayList<>();
@@ -51,7 +50,7 @@ class SSTableTest {
                 skipped.add(e);
         }
 
-        t = new SSTable(tempDirectory + TEST_FILE, inserted.iterator(), SAMPLE_SIZE);
+        t = new SSTable(tempDirectory.toString(), inserted.iterator(), SAMPLE_SIZE);
     }
 
     @AfterAll

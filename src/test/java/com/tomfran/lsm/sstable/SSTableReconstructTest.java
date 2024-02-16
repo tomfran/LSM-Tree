@@ -17,7 +17,6 @@ import static com.tomfran.lsm.sstable.SSTable.*;
 
 public class SSTableReconstructTest {
 
-    static final String FILE1 = "/sstable1", FILE2 = "/sstable2";
     @TempDir
     static Path tempDirectory;
     static SSTable t1;
@@ -34,17 +33,17 @@ public class SSTableReconstructTest {
                      .sorted((a, b) -> compare(a.key(), b.key()))
                      .toList();
 
-        t1 = new SSTable(tempDirectory + FILE1, items.iterator(), 3);
+        t1 = new SSTable(tempDirectory.toString(), items.iterator(), 3);
 
         for (var end : List.of(INDEX_FILE_EXTENSION, DATA_FILE_EXTENSION, BLOOM_FILE_EXTENSION))
-            Files.copy(Path.of(tempDirectory + FILE1 + end), Path.of(tempDirectory + FILE2 + end));
+            Files.copy(Path.of(t1.filename + end), Path.of(t1.filename + "_copy" + end));
 
         t1.close();
     }
 
     @Test
     void shouldReconstruct() {
-        var t2 = new SSTable(tempDirectory + FILE2);
+        var t2 = new SSTable(t1.filename + "_copy");
 
         assert t2.size == t1.size;
 
