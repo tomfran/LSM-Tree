@@ -25,7 +25,7 @@ import static java.util.concurrent.Executors.newSingleThreadExecutor;
  */
 public class LSMTree {
 
-    static final int DEFAULT_MEMTABLE_MAX_SIZE = 1 << 10;
+    static final long DEFAULT_MEMTABLE_MAX__BYTE_SIZE = 1024 * 1024 * 256;
     static final int DEFAULT_TABLE_LEVEL_MAX_SIZE = 5;
     static final int DEFAULT_SSTABLE_SAMPLE_SIZE = 1 << 10;
     static final String DEFAULT_DATA_DIRECTORY = "LSM-data";
@@ -34,7 +34,7 @@ public class LSMTree {
     final Object immutableMemtablesLock = new Object();
     final Object tableLock = new Object();
 
-    final int mutableMemtableMaxSize;
+    final long mutableMemtableMaxSize;
     final int tableLevelMaxSize;
     final String dataDir;
 
@@ -48,22 +48,22 @@ public class LSMTree {
      * Creates a new LSMTree with a default memtable size and data directory.
      */
     public LSMTree() {
-        this(DEFAULT_MEMTABLE_MAX_SIZE, DEFAULT_TABLE_LEVEL_MAX_SIZE, DEFAULT_DATA_DIRECTORY);
+        this(DEFAULT_MEMTABLE_MAX__BYTE_SIZE, DEFAULT_TABLE_LEVEL_MAX_SIZE, DEFAULT_DATA_DIRECTORY);
     }
 
     /**
      * Creates a new LSMTree with a memtable size and data directory.
      *
-     * @param mutableMemtableMaxSize The maximum size of the memtable before it is flushed to disk.
+     * @param mutableMemtableMaxByteSize The maximum size of the memtable before it is flushed to disk.
      * @param dataDir                The directory to store the data in.
      */
-    public LSMTree(int mutableMemtableMaxSize, int tableLevelMaxSize, String dataDir) {
-        this.mutableMemtableMaxSize = mutableMemtableMaxSize;
+    public LSMTree(long mutableMemtableMaxByteSize, int tableLevelMaxSize, String dataDir) {
+        this.mutableMemtableMaxSize = mutableMemtableMaxByteSize;
         this.tableLevelMaxSize = tableLevelMaxSize;
         this.dataDir = dataDir;
         createDataDir();
 
-        mutableMemtable = new Memtable(mutableMemtableMaxSize);
+        mutableMemtable = new Memtable();
         immutableMemtables = new LinkedList<>();
         tables = new ObjectArrayList<>();
         tables.add(new LinkedList<>());
@@ -132,18 +132,18 @@ public class LSMTree {
     /**
      * Stop the background threads.
      */
-    public void stop() throws InterruptedException {
+    public void stop() {
         memtableFlusher.shutdownNow();
         tableCompactor.shutdownNow();
     }
 
     private void checkMemtableSize() {
-        if (mutableMemtable.size() <= mutableMemtableMaxSize)
+        if (mutableMemtable.byteSize() <= mutableMemtableMaxSize)
             return;
 
         synchronized (immutableMemtablesLock) {
             immutableMemtables.addFirst(mutableMemtable);
-            mutableMemtable = new Memtable(mutableMemtableMaxSize);
+            mutableMemtable = new Memtable();
             memtableFlusher.execute(this::flushLastMemtable);
         }
     }

@@ -8,21 +8,14 @@ import java.util.Iterator;
 public class Memtable implements Iterable<ByteArrayPair> {
 
     SkipList list;
+    long byteSize;
 
     /**
      * Initialize a Memtable with default list size.
      */
     public Memtable() {
         list = new SkipList();
-    }
-
-    /**
-     * Initialize a Memtable with an expected number of elements.
-     *
-     * @param numElements the expected max size of the underlying list.
-     */
-    public Memtable(int numElements) {
-        list = new SkipList(numElements);
+        byteSize = 0L;
     }
 
     /**
@@ -32,6 +25,7 @@ public class Memtable implements Iterable<ByteArrayPair> {
      */
     public void add(ByteArrayPair item) {
         list.add(item);
+        byteSize += item.size();
     }
 
     /**
@@ -54,12 +48,12 @@ public class Memtable implements Iterable<ByteArrayPair> {
     }
 
     /**
-     * Get size of the underlying list.
+     * Return the size in bytes of the skiplist.
      *
-     * @return the list size.
+     * @return bytes indicating size of underlying list.
      */
-    public int size() {
-        return list.size();
+    public long byteSize() {
+        return byteSize;
     }
 
     /**

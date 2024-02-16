@@ -20,6 +20,13 @@ public class TestUtils {
         );
     }
 
+    public static ByteArrayPair getRandomPair(int keyLen, int valueLen) {
+        return new ByteArrayPair(
+                getRandomByteArray(keyLen),
+                getRandomByteArray(valueLen)
+        );
+    }
+
     public static byte[] getRandomByteArray(int length) {
         byte[] bytes = new byte[length];
         rn.nextBytes(bytes);

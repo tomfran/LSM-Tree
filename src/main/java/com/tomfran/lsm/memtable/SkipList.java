@@ -14,7 +14,7 @@ import static java.lang.Math.log;
  */
 public class SkipList implements Iterable<ByteArrayPair> {
 
-    static final int DEFAULT_ELEMENTS = 1 << 16;
+    static final int DEFAULT_ELEMENTS = 1 << 20;
 
     final Node sentinel;
 

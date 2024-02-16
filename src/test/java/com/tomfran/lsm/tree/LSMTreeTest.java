@@ -20,11 +20,11 @@ class LSMTreeTest {
     public void writeFlush() throws InterruptedException {
         LSMTree tree = new LSMTree(maxSize, levelSize, tempDirectory + "/test1");
 
-        IntStream.range(0, maxSize + 2).forEach(i -> tree.add(getRandomPair()));
+        IntStream.range(0, 10).forEach(i -> tree.add(getRandomPair(2, 2)));
 
         Thread.sleep(500);
 
-        assert tree.mutableMemtable.size() >= 1 : "mutable memtable size is " + tree.mutableMemtable.size();
+        assert tree.mutableMemtable.byteSize() >= 1 : "mutable memtable size is " + tree.mutableMemtable.byteSize();
         assert !tree.tables.get(0).isEmpty() : "table is null";
 
         tree.stop();
@@ -36,8 +36,8 @@ class LSMTreeTest {
 
         Object2ObjectArrayMap<byte[], byte[]> items = new Object2ObjectArrayMap<>();
 
-        IntStream.range(0, 10 * maxSize).forEach(i -> {
-            var it = getRandomPair();
+        IntStream.range(0, 10).forEach(i -> {
+            var it = getRandomPair(2, 2);
             tree.add(it);
             items.put(it.key(), it.value());
         });

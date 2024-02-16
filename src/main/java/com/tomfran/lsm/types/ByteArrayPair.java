@@ -6,6 +6,10 @@ import static com.tomfran.lsm.comparator.ByteArrayComparator.compare;
 
 public record ByteArrayPair(byte[] key, byte[] value) implements Comparable<ByteArrayPair> {
 
+    public int size() {
+        return key.length + value.length;
+    }
+
     @Override
     public int hashCode() {
         return Arrays.hashCode(key);
