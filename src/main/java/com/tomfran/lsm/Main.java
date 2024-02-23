@@ -20,7 +20,7 @@ public class Main {
         if (new File(DIRECTORY).exists())
             deleteDir();
 
-        LSMTree tree = new LSMTree(1024 * 512, 2, DIRECTORY);
+        LSMTree tree = new LSMTree(1024 * 1024, 2, DIRECTORY);
 
         Scanner scanner = new Scanner(System.in);
         scanner.useDelimiter("\n");

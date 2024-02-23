@@ -146,17 +146,20 @@ crucial for negative
 lookup on SSTables. But no bloom filter can save us if too many tables are available to search, hence we need
 _compaction_.
 
-When flushing a Memtable, we create an SSTable of level one. When the first level reaches a certain threshold,
-all its tables are merged into a level-two table, and so on. This permits us to save storage and query fewer
-tables in lookups.
+When flushing a Memtable, we create an SSTable of level zero.
+When the first level reaches a certain threshold, all its tables are merged with 
+the subsequent level in a sorted run.
 
-Note that this style of compaction is not standard, there are various sophisticated techniques, but for the sake of
-this project this simple level-like compaction works wonders.
+A sorted run is a procedure in which we merge SSTables into multiple tables. The result 
+is a sequence of SSTs that are non-intersecting, more details can be found in the Medium article.
+
+This check is made periodically on all levels to ensure a level does not grow too much.
+Levels and SST sizes increases by a factor of 1.75 on each step.
 
 # Benchmarks
 
 I am using [JMH](https://openjdk.java.net/projects/code-tools/jmh/) to run benchmarks,
-the results are obtained on AMD Ryzen™ 5 4600H with 16GB of RAM and 512GB SSD.
+the results are obtained on a base model M3 pro Macbook Pro.
 
 To run them use `./gradlew jmh`.
 
@@ -180,9 +183,8 @@ c.t.l.sstable.SSTableBenchmark.randomAccess    thrpt    5     7989.945 ±     40
 
 ```
 Benchmark                                       Mode  Cnt        Score        Error  Units
-c.t.l.bloom.BloomFilterBenchmark.add           thrpt    5  3190753.307 ±  74744.764  ops/s
-c.t.l.bloom.BloomFilterBenchmark.contains      thrpt    5  3567392.634 ± 220377.613  ops/s
-
+c.t.l.bloom.BloomFilterBenchmark.add        thrpt    5  10870782.166 ± 151949.254  ops/s
+c.t.l.bloom.BloomFilterBenchmark.contains   thrpt    5  11061776.096 ±  16752.915  ops/s
 ```
 
 **Skip-List**
@@ -191,11 +193,9 @@ c.t.l.bloom.BloomFilterBenchmark.contains      thrpt    5  3567392.634 ± 220377
 - Add/Remove: add and remove keys from a 100k keys skip-list.
 
 ```
-
 Benchmark                                       Mode  Cnt        Score        Error  Units
-c.t.l.memtable.SkipListBenchmark.addRemove     thrpt    5   430239.471 ±   4825.990  ops/s
-c.t.l.memtable.SkipListBenchmark.get           thrpt    5   487265.620 ±   8201.227  ops/s
-
+c.t.l.memtable.SkipListBenchmark.addRemove  thrpt    5   1066479.961 ±  70216.252  ops/s
+c.t.l.memtable.SkipListBenchmark.get        thrpt    5   1280680.984 ±  42235.970  ops/s
 ```
 
 **Tree**
@@ -205,21 +205,20 @@ c.t.l.memtable.SkipListBenchmark.get           thrpt    5   487265.620 ±   8201
 
 ```
 Benchmark                                       Mode  Cnt        Score        Error  Units
-c.t.l.tree.LSMTreeAddBenchmark.add             thrpt    5   540788.751 ±  54491.134  ops/s
-c.t.l.tree.LSMTreeGetBenchmark.get             thrpt    5     9426.951 ±    241.190  ops/s
-
+c.t.l.tree.LSMTreeAddBenchmark.add          thrpt    5    722278.306 ±  30802.444  ops/s
+c.t.l.tree.LSMTreeGetBenchmark.get          thrpt    5     20098.919 ±    240.244  ops/s
 ```
 
 ## Possible improvements
 
 There is certainly space for improvement on this project:
 
-1. Blocked bloom filters: its a variant of a classic array-like bloom filter which is more cache efficient;
-2. Search fingers in the Skip list: the idea is to keep a pointer to the last search, and start from there with
+- [ ] Blocked bloom filters: its a variant of a classic array-like bloom filter which is more cache efficient;
+- [ ] Search fingers in the Skip list: the idea is to keep a pointer to the last search, and start from there with
    subsequent queries;
-3. Proper level compaction in the LSM tree;
-4. Write ahead log for the insertions, without this, a crash makes all the in-memory writes disappear;
-5. Proper recovery: handle crashes and reboots, using existing SSTables and the write-ahead log.
+- [x] Proper level compaction in the LSM tree;
+- [ ] Write ahead log for the insertions, without this, a crash makes all the in-memory writes disappear;
+- [ ] Proper recovery: handle crashes and reboots, using existing SSTables and the write-ahead log.
 
 I don't have the practical time to do all of this, perhaps the first two points will be handled in the future.
 

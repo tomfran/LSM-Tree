@@ -29,7 +29,6 @@ jmh {
     warmupIterations = 3
     iterations = 5
     benchmarkMode = ['thrpt']
-    includes = ['LSMTreeAddBenchmark*']
     jmhTimeout = '15s'
     jmhVersion = '1.37'
     resultFormat = 'JSON'
