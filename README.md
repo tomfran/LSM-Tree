@@ -21,7 +21,23 @@ Here you can find a [Medium article](https://medium.com/@tomfran/log-structured-
 
 To interact with a toy tree you can use `./gradlew run -q` to spawn a console.
 
-![console.png](misc%2Fconsole.png)
+```
+
+  |      __|   \  |           __ __|              
+  |    \__ \  |\/ |   ____|      |   _| -_)   -_) 
+ ____| ____/ _|  _|             _| _| \___| \___| 
+
+Commands:
+  - s/set  <key> <value> : insert a key-value pair;
+  - r/rgn  <start> <end> : insert this range of numeric keys with random values;
+  - g/get  <key>         : get a key value;
+  - d/del  <key>         : delete a key;
+  - p/prt                : print current tree status;
+  - e/exit               : stop the console;
+  - h/help               : show this message.
+
+> 
+```
 
 # Architecture
 
