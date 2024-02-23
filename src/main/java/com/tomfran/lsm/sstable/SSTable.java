@@ -102,8 +102,8 @@ public class SSTable implements Iterable<ByteArrayPair> {
      */
     public byte[] get(byte[] key) {
         if (ByteArrayComparator.compare(key, minKey) == -1 ||
-                ByteArrayComparator.compare(key, maxKey) == 1 ||
-                !bloomFilter.mightContain(key))
+            ByteArrayComparator.compare(key, maxKey) == 1 ||
+            !bloomFilter.mightContain(key))
             return null;
 
         int offsetIndex = getCandidateOffsetIndex(key);

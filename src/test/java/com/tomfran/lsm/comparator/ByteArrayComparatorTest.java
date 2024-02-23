@@ -15,7 +15,7 @@ class ByteArrayComparatorTest {
                 Arguments.of(new byte[]{1, 2}, new byte[]{1, 3}, -1),
                 Arguments.of(new byte[]{1, 2}, new byte[]{1, 1}, 1),
                 Arguments.of(new byte[]{1, 2}, new byte[]{1, 2}, 0)
-        );
+                        );
     }
 
     @ParameterizedTest

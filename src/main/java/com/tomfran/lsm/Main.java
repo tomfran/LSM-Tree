@@ -20,7 +20,7 @@ public class Main {
         if (new File(DIRECTORY).exists())
             deleteDir();
 
-        LSMTree tree = new LSMTree(1024 * 1024 * 5, 2, DIRECTORY);
+        LSMTree tree = new LSMTree(1024 * 512, 2, DIRECTORY);
 
         Scanner scanner = new Scanner(System.in);
         scanner.useDelimiter("\n");
@@ -64,7 +64,7 @@ public class Main {
                     }
                     case "r", "rng" -> {
                         IntStream.range(Integer.parseInt(parts[1]), Integer.parseInt(parts[2]))
-                                .forEach(i -> tree.add(new ByteArrayPair(intToBytes(i), intToBytes(r.nextInt()))));
+                                 .forEach(i -> tree.add(new ByteArrayPair(intToBytes(i), intToBytes(r.nextInt()))));
 
                         System.out.println("ok");
                     }

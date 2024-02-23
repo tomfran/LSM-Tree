@@ -5,6 +5,7 @@ import com.tomfran.lsm.sstable.SSTable;
 import com.tomfran.lsm.types.ByteArrayPair;
 import it.unimi.dsi.fastutil.objects.ObjectArrayList;
 
+import javax.management.relation.RoleUnresolvedList;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.LinkedList;
@@ -29,7 +30,7 @@ public class LSMTree {
 
     static final long DEFAULT_MEMTABLE_MAX_BYTE_SIZE = 1024 * 1024 * 32;
     static final int DEFAULT_LEVEL_ZERO_MAX_SIZE = 2;
-    static final int LEVEL_INCR_FACTOR = 2;
+    static final double LEVEL_INCR_FACTOR = 1.75;
 
     static final String DEFAULT_DATA_DIRECTORY = "LSM-data";
 
@@ -168,7 +169,7 @@ public class LSMTree {
         SSTable table = new SSTable(dataDir, memtableToFlush.iterator(), mutableMemtableMaxSize * 2);
 
         synchronized (tableLock) {
-            levels.get(0).add(table);
+            levels.get(0).add(0, table);
         }
 
         synchronized (immutableMemtablesLock) {
@@ -186,32 +187,31 @@ public class LSMTree {
             for (int i = 0; i < n; i++) {
                 ObjectArrayList<SSTable> level = levels.get(i);
 
-                if (level.size() <= maxLevelSize)
-                    continue;
+                if (level.size() > maxLevelSize) {
+                    // add new level if needed
+                    if (i == n - 1)
+                        levels.add(new ObjectArrayList<>());
 
-                // add new level if needed
-                if (i == n - 1)
-                    levels.add(new ObjectArrayList<>());
+                    // take all tables from the current and next level
+                    ObjectArrayList<SSTable> nextLevel = levels.get(i + 1);
+                    ObjectArrayList<SSTable> merge = new ObjectArrayList<>();
+                    merge.addAll(level);
+                    merge.addAll(nextLevel);
 
-                // take all tables from the current and next level
-                ObjectArrayList<SSTable> nextLevel = levels.get(i + 1);
-                ObjectArrayList<SSTable> merge = new ObjectArrayList<>();
-                merge.addAll(level);
-                merge.addAll(nextLevel);
+                    // perform a sorted run and replace the next level
+                    var sortedRun = SSTable.sortedRun(dataDir, sstMaxSize, merge.toArray(SSTable[]::new));
 
-                // perform a sorted run and replace the next level
-                var sortedRun = SSTable.sortedRun(dataDir, sstMaxSize, merge.toArray(SSTable[]::new));
+                    // delete previous tables
+                    level.forEach(SSTable::closeAndDelete);
+                    level.clear();
+                    nextLevel.forEach(SSTable::closeAndDelete);
+                    nextLevel.clear();
 
-                // delete previous tables
-                level.forEach(SSTable::closeAndDelete);
-                level.clear();
-                nextLevel.forEach(SSTable::closeAndDelete);
-                nextLevel.clear();
+                    nextLevel.addAll(sortedRun);
+                }
 
-                nextLevel.addAll(sortedRun);
-
-                maxLevelSize *= LEVEL_INCR_FACTOR;
-                sstMaxSize *= LEVEL_INCR_FACTOR;
+                maxLevelSize = (int) (maxLevelSize * LEVEL_INCR_FACTOR);
+                sstMaxSize = (int) (sstMaxSize * LEVEL_INCR_FACTOR);
             }
         }
     }
@@ -241,8 +241,8 @@ public class LSMTree {
         for (var level : levels) {
             s.append(String.format("\t\t- %d: ", i));
             level.stream()
-                    .map(st -> String.format("[ %s, size: %d ] ", st.filename, st.size))
-                    .forEach(s::append);
+                 .map(st -> String.format("[ %s, size: %d ] ", st.filename, st.size))
+                 .forEach(s::append);
             s.append("\n");
             i += 1;
         }

@@ -27,7 +27,7 @@ tasks.test {
 jmh {
     fork = 1
     warmupIterations = 3
-    iterations = 10
+    iterations = 5
     benchmarkMode = ['thrpt']
     includes = ['LSMTreeAddBenchmark*']
     jmhTimeout = '15s'
